@@ -1,0 +1,8 @@
+[
+  {"id":"model-page-phrasing","input":"A new site should be called Science Commons.","title":"Science Commons","elements":[]},
+  {"id":"model-heading-phrasing","input":"Create a page titled \"Demo\". Include an introductory heading whose words are \"Discover our campus\".","title":"Demo","elements":[{"type":"heading","text":"Discover our campus"}]},
+  {"id":"model-button-style","input":"Create a page titled \"Demo\". Add a button that says \"Join\". The Join button ought to have twelve-pixel corners.","title":"Demo","elements":[{"type":"button","text":"Join","properties":{"border-radius":"12px"}}]},
+  {"id":"model-link-extraction","input":"Create a page titled \"Demo\". Give visitors a way to reach https://example.com using a link captioned \"Research portal\".","title":"Demo","elements":[{"type":"link","text":"Research portal","properties":{"href":"https://example.com"}}]},
+  {"id":"model-ambiguous-button","input":"Create a page titled \"Demo\". Add a button that says \"Join\". Add a button that says \"Explore\". Could you soften the corners of the button?","reject":"clarification"},
+  {"id":"model-unsupported-storage","input":"Create a page titled \"Demo\". Visitors should be able to keep their entered details permanently in a database.","reject":"unsupported"}
+]

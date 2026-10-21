@@ -52,6 +52,17 @@ def test_normalization_preserves_quotes_and_source_lines():
     assert sentence.normalized == 'please add a big blue button that says "Create  THE Page. Please!".'
 
 
+def test_normalization_splits_sentences_outside_quotes_and_keeps_source_line():
+    sentences = normalize(
+        'Create a page titled "Page. One". Add a heading that says "Heading".\n'
+        'Please move it to the left of the heading.'
+    )
+    assert [sentence.line for sentence in sentences] == [1, 1, 2]
+    assert sentences[0].normalized == 'add a page titled "Page. One".'
+    assert sentences[1].normalized == 'add a heading that says "Heading".'
+    assert sentences[2].normalized == 'please put it to the left of the heading.'
+
+
 @pytest.mark.parametrize("verb", ["Add", "Create", "INSERT"])
 def test_synonyms_and_optional_words(verb):
     result = compile_source(f'create page titled "Demo"\nplease {verb} the paragraph says "Text"')
@@ -86,7 +97,6 @@ def test_unresolved_reference_is_error():
     'Make it italic.',
     'Add an image "logo.png".',
     'Add a heading that says "Unclosed.',
-    'Add a heading that says "One". Make it bold.',
     'Add a heading that says "One"..',
 ])
 def test_invalid_syntax_reports_original_line_and_blocks_output(instruction, tmp_path):

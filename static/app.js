@@ -68,12 +68,13 @@ window.addEventListener('pageshow', () => {
 for (const button of document.querySelectorAll('[data-source-line]')) {
   button.addEventListener('click', () => {
     const line = Number(button.dataset.sourceLine);
-    const lines = source.value.split('\n');
+    const targetEditor = document.querySelector('#' + (button.dataset.sourceEditor || 'source')) || source;
+    const lines = targetEditor.value.split('\n');
     const start = lines.slice(0, line - 1).reduce((length, text) => length + text.length + 1, 0);
-    source.focus();
-    source.setSelectionRange(start, start + (lines[line - 1] || '').length);
-    source.scrollTop = Math.max(0, (line - 3) * parseFloat(getComputedStyle(source).lineHeight));
-    source.scrollLeft = 0;
-    lineNumbers.scrollTop = source.scrollTop;
+    targetEditor.focus();
+    targetEditor.setSelectionRange(start, start + (lines[line - 1] || '').length);
+    targetEditor.scrollTop = Math.max(0, (line - 3) * parseFloat(getComputedStyle(targetEditor).lineHeight));
+    targetEditor.scrollLeft = 0;
+    if (targetEditor === source) lineNumbers.scrollTop = source.scrollTop;
   });
 }

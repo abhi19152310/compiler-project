@@ -1,23 +1,50 @@
 // One instruction per nonblank source line. A terminal full stop is optional.
 start: statement DOT?
-?statement: page | add_element | format_element
+?statement: page | add_element | add_image | format_element | position_element | component | configure | attach | arrange | wrap
+// Normalization emits this constrained DSL; semantics validates types and properties.
+component: COMPONENT STRING STRING property* parent?
+property: WITH STRING STRING
+parent: INSIDE STRING
+configure: CONFIGURE STRING STRING STRING
+attach: ATTACH STRING STRING
+arrange: ARRANGE STRING DIRECTION STRING
+wrap: WRAP STRING STRING
+COMPONENT: /component\b/
+CONFIGURE: /configure\b/
+ATTACH: /attach\b/
+ARRANGE: /arrange\b/
+WRAP: /wrap\b/
+WITH: /with\b/
+INSIDE: /inside\b/
 page: PLEASE? ADD ARTICLE? PAGE TITLED STRING
 add_element: PLEASE? ADD ARTICLE? SIZE? COLOR? ELEMENT THAT? SAYS STRING
+add_image: PLEASE? ADD ARTICLE? ELEMENT STRING DESCRIBED AS STRING
 format_element: PLEASE? MAKE REFERENCE BOLD
+              | PLEASE? MAKE REFERENCE FONT
+              | PLEASE? MAKE REFERENCE SIZE
+              | PLEASE? MAKE REFERENCE COLOR
+position_element: PLEASE? PUT REFERENCE (TO ARTICLE?)? DIRECTION OF? ARTICLE? ELEMENT
 
 PLEASE: /please\b/
 ADD: /add\b/
-ARTICLE: /(?:a|the)\b/
+ARTICLE: /(?:a|an|the)\b/
 PAGE: /page\b/
 TITLED: /titled\b/
-ELEMENT: /(?:heading|paragraph|button)\b/
+ELEMENT: /(?:heading|paragraph|button|image)\b/
 THAT: /that\b/
 SAYS: /says\b/
+DESCRIBED: /described\b/
+AS: /as\b/
 MAKE: /make\b/
 REFERENCE: /(?:it|this)\b/
 BOLD: /bold\b/
+FONT: /(?:arial|serif|sans-serif)\b/
 SIZE: /(?:small|medium|big)\b/
 COLOR: /(?:blue|red|green|black|white)\b/
+PUT: /put\b/
+TO: /to\b/
+DIRECTION: /(?:left|right|above|below)\b/
+OF: /of\b/
 DOT: "."
 STRING: /"(?:[^"\\\r\n]|\\.)*"/
 %import common.WS_INLINE

@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8,<10
+html5lib>=1.1,<2
+tinycss2>=1.4,<2
+# Optional browser checks use an installed Chrome (no browser download needed).
+playwright>=1.50,<2

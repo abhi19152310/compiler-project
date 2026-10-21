@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 import re
 
@@ -20,6 +21,8 @@ def test_editor_is_available(client):
     assert response.status_code == 200
     assert b"Compile Webpage" in response.data
     assert b"Supported sentence guide" in response.data
+    assert b"Page Tree (IR)" in response.data
+    assert b"4.5:1 contrast minimum" in response.data
 
 
 def test_compile_preview_and_download_are_real_files(client, tmp_path):
@@ -41,6 +44,47 @@ def test_compile_preview_and_download_are_real_files(client, tmp_path):
     assert css_download.data == css.data
     saved = list((tmp_path / "web").glob("*/index.html"))
     assert len(saved) == 1 and saved[0].read_bytes() == preview.data
+
+
+def test_uploaded_image_is_saved_and_served_with_the_compiled_page(client):
+    source = (
+        'Create a page titled "Page".\n'
+        'Add an image "stage.png" described as "Main stage".'
+    )
+    response = client.post("/", data={
+        "source": source,
+        "assets": (BytesIO(b"\x89PNG\r\n\x1a\nimage"), "stage.png", "image/png"),
+    })
+    match = re.search(rb'sandbox src="([^"]+)"', response.data)
+    assert match
+    preview_url = match[1].decode()
+    assert b'<img id="element1" src="stage.png" alt="Main stage">' in client.get(preview_url).data
+    image = client.get(preview_url.replace("index.html", "stage.png"))
+    assert image.status_code == 200
+    assert image.data == b"\x89PNG\r\n\x1a\nimage"
+
+
+def test_web_image_upload_errors_are_reported(client):
+    source = (
+        'Create a page titled "Page".\n'
+        'Add an image "stage.png" described as "Main stage".'
+    )
+    missing = client.post("/", data={"source": source})
+    assert b"Upload the image file(s)" in missing.data
+    assert b"<iframe" not in missing.data
+
+    invalid = client.post("/", data={
+        "source": source,
+        "assets": (BytesIO(b"not an image"), "stage.png", "image/png"),
+    })
+    assert b"is not a supported PNG" in invalid.data
+    assert b"<iframe" not in invalid.data
+
+
+def test_editor_keeps_the_original_source_size_limit(client):
+    response = client.post("/", data={"source": "x" * (128 * 1024 + 1)})
+    assert b"Source instructions cannot exceed 128 KB" in response.data
+    assert b"<iframe" not in response.data
 
 
 def test_failed_compile_has_no_preview_or_written_files(client, tmp_path):

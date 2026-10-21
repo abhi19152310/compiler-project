@@ -1,4 +1,4 @@
-# Installed and tested for Review 1 on Python 3.14.3.
+# Locked versions tested by the project on Python 3.12.4.
 blinker==1.9.0
 click==8.5.0
 colorama==0.4.6

@@ -1,73 +1,111 @@
-# Review 1 verification
+# Project validation
 
-Verified on 14 October 2026 in the project workspace on Windows, using Python
-3.14.3, Flask 3.1.3, Lark 1.3.1, and pytest 9.1.1. Exact installed dependency
-versions are recorded in `requirements-lock.txt`.
+## NLP-assisted enhancement: latest results
+
+Baseline before this enhancement: **220 passed**. The final enhanced suite on
+2026-10-21 completed with **280 passed, 1 skipped in 8.70 seconds**. The skipped
+test requires a real configured Ollama model; no running Ollama service was
+available. All original tests still pass. In addition to the 12 original Chrome
+viewport checks, a real Flask/Chrome workflow test verifies English creation,
+follow-up edits, nav styling, rounded buttons, stable IDs, mobile editor overflow,
+failed edits and saved-state recovery.
+
+New tests verify structured model requests/responses, schema rejection, semantic
+and parser boundaries, unsafe URLs/text, model timeout/rate-limit/unavailability,
+offline operation during model outages, unique/pronoun/ordinal/directional
+references, SQLite persistence, optimistic revisions and image reuse. Controlled
+provider responses test integration behavior; they are not real-model accuracy
+results. See [architecture and setup](NLP_ARCHITECTURE.md).
+
+The authored 30-case development evaluation (five repetitions per case) produced:
+
+| Metric | Legacy deterministic path | Hybrid offline path |
+| --- | --- | --- |
+| Successful interpretation, positive cases | 6/24 (25%) | 24/24 (100%) |
+| Valid parsed DSL, positive cases | 6/24 (25%) | 24/24 (100%) |
+| Expected intent/properties in IR | 6/24 (25%) | 24/24 (100%) |
+| Compiler validation, positive cases | 6/24 (25%) | 24/24 (100%) |
+| Expected generated HTML/CSS structure | 6/24 (25%) | 24/24 (100%) |
+| No output for negative cases | 5/6 | 6/6 |
+| Expected rejection diagnostic | 1/6 | 6/6 |
+| Mean in-process request latency | 0.427 ms | 1.135 ms |
+
+These are measured development-set results, not independent general-language or
+live-model benchmarks. The compiler tests ran concurrently with this timing run;
+the timings are illustrative and not isolated performance measurements. Dataset,
+metric definitions and per-case traces are in `evaluation/` and
+[evaluation-results.json](evaluation-results.json). The hybrid results above used
+offline interpretation, with no live model calls. Real-model challenges and an
+explicit opt-in test are supplied but have not been executed against a real model.
+
+The ordinary-English demo was exported to `build/natural-review/`, including
+`compiler-debug.json` with normalized instructions, lexer tokens, AST, symbols,
+interpretation routes and page-tree IR. Existing static-form and accessibility
+scope limits still apply.
 
 ## Automated tests
 
-Command:
+Run from the project folder:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q --tb=short
 ```
 
-Actual final result:
+The first component expansion started from 59 tests. The expanded suite includes compiler,
+security, HTML/CSS parsing, full-page exports and browser viewport checks.
+Install validation dependencies with:
 
-```text
-........................................                                 [100%]
-40 passed in 1.75s
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+$env:TEXT2WEB_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+.\.venv\Scripts\python.exe -m pytest -q --tb=short
 ```
 
-The suite covers supported sentences, optional words and synonyms, quote and
-line-number preservation, the LALR parser configuration, visible tokens, AST and
-symbol-table reference behavior, malformed syntax, invalid string escapes,
-unresolved references, document structure, deterministic generation, escaped
-HTML, real file output, overwrite protection, CLI success/failure, Flask preview
-and downloads, stale-preview prevention, and file-write error reporting.
+Without `TEXT2WEB_BROWSER`, the 12 browser tests are skipped explicitly. HTML/CSS
+validator tests require html5lib and tinycss2 from requirements-dev.txt and are
+skipped if those optional packages are absent.
 
-An initial run exposed a keyword-prefix lexer bug (`a` consuming the start of
-`add`). Keyword boundaries were corrected in the grammar before the passing run.
+The 2026-10-21 validation uses Python 3.14, Flask 3.1.3, Lark 1.3.1, pytest 9.1.1,
+html5lib 1.1, tinycss2 1.5.1 and Playwright 1.64.0 with installed Chrome
+154.0.8037.100. The earlier component-expansion run completed with **220 passed in 7.67 seconds**
+(208 non-browser tests and 12 real Chrome tests; none skipped).
+The Chrome checks passed at 375, 768 and 1440 CSS pixels for each of the four
+new example pages. Checks include page overflow, mobile card stacking, desktop
+equal-height rows, navigation direction, image loading/containment, a single main
+landmark, and inert forms with disabled submission.
 
-## Actual command-line output
+Tests cover normalization and
+same-line sentence recovery, Lark parsing, symbol references, type and
+accessibility errors, contrast checks, cycle detection, nested row/column IR,
+optimization, escaped HTML, local image copying and uploads, CLI behavior,
+Flask preview/downloads, and failed-build handling. Expanded tests also cover URL
+and CSS injection attempts, missing image descriptions, actual link destinations,
+form labels/options and types, heading hierarchy, parent-child cycles and content
+models, shared CSS classes, alias precedence, malformed quoted literals, optional
+NLP re-parsing, fragment references, inherited/hover contrast, and deterministic
+complete-page export. Strict html5lib parsing and tinycss2 parsing are exercised on
+all four examples. These parsers check syntax; semantic constraints are also
+checked separately by the compiler tests.
 
-```text
-Compiled 3 elements into build\fest\index.html and style.css.
-```
+All four examples were also exported to `build/examples/` with HTML/CSS and
+required local image assets: college event (30 elements), personal portfolio
+(19), service landing (27), and contact page (12).
 
-The generated HTML and CSS were read and checked. The document contains the
-expected title, heading, paragraph, button, and relative stylesheet link.
+## Manual checks
 
-The invalid example exited with status 1 and reported:
+- The web editor returns a successful page and compiles the built-in fest example.
+- The compiler generates deterministic HTML and CSS from the same source.
+- The CLI refuses to write failed builds and protects existing output unless
+  `--force` is provided.
+- The compiler rejects missing image descriptions, invalid image sources,
+  unsupported formatting, insufficient text contrast, and contradictory
+  position constraints before generating HTML.
+- Image uploads accept PNG, JPEG, GIF, and WebP content only; local image URLs
+  are copied into the generated folder.
 
-```text
-Line 3 [syntax]: Unsupported or malformed instruction. Use the sentence guide; put one instruction on each line and surround text with double quotes.
-Compilation failed; no output files written.
-```
+## Scope
 
-The `build/invalid` directory did not exist after that failed compilation.
-
-## Running application and browser
-
-- Started the Flask development server; `GET http://127.0.0.1:5000/` returned 200.
-- Used an isolated headless Chrome profile to submit the preloaded instructions
-  through the actual HTML form and inspect the sandboxed preview.
-- Browser document title: `Techno Fest`.
-- Heading: `Techno 2026`; paragraph: `Welcome to our college fest`.
-- Button text: `Register`; computed font weight: `700`; computed background:
-  `rgb(43, 108, 176)`.
-- Submitted a page declaration followed by `Make it bold.` with no element.
-  The browser displayed the line 2 reference error and removed the preview.
-- Captured and visually inspected `build/review1-preview.png` at 1280 × 1000.
-
-Sandboxed Chrome attempts initially lost their debugging connections. The final
-browser check ran in a separate hidden Chrome instance outside that execution
-sandbox and completed successfully. Temporary browser profiles were used only
-for verification, not as project dependencies.
-
-## Limits of the evidence
-
-These checks verify the Review 1 subset. They do not establish full language
-coverage, WCAG compliance, layout correctness, optimization correctness,
-cross-browser compatibility, production readiness, or a numerical percentage
-of completion against the full project. Those features remain planned.
+These checks cover the documented controlled-English language and its compiler
+workflow. They do not claim that Text2Web understands unrestricted English,
+implements every WCAG requirement, or provides JavaScript, form submission,
+database features, or production hosting.

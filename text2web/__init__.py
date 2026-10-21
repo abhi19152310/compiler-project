@@ -1,5 +1,5 @@
-"""Text2Web's Review 1 controlled-English compiler."""
+"""Text2Web's controlled-English webpage compiler."""
 
-from .compiler import compile_source
+from .compiler import compile_source, compile_update
 
-__all__ = ["compile_source"]
+__all__ = ["compile_source", "compile_update"]

@@ -1,0 +1,1074 @@
+{
+  "python": "3.14.3",
+  "repeats": 5,
+  "dataset": "30 authored development cases; not an independent benchmark",
+  "model": "not configured; no live-model results",
+  "legacy": {
+    "metrics": {
+      "interpreted": {
+        "correct": 6,
+        "total": 24,
+        "percent": 25.0
+      },
+      "valid_dsl": {
+        "correct": 6,
+        "total": 24,
+        "percent": 25.0
+      },
+      "extraction_correct": {
+        "correct": 6,
+        "total": 24,
+        "percent": 25.0
+      },
+      "compiler_success": {
+        "correct": 6,
+        "total": 24,
+        "percent": 25.0
+      },
+      "output_correct": {
+        "correct": 6,
+        "total": 24,
+        "percent": 25.0
+      },
+      "safe_rejection": {
+        "correct": 5,
+        "total": 6,
+        "percent": 83.33
+      },
+      "correct_rejection": {
+        "correct": 1,
+        "total": 6,
+        "percent": 16.67
+      },
+      "average_latency_ms": 0.427
+    },
+    "cases": [
+      {
+        "id": "legacy-title",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.217,
+        "routes": {}
+      },
+      {
+        "id": "legacy-text",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.422,
+        "routes": {}
+      },
+      {
+        "id": "legacy-button",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.444,
+        "routes": {}
+      },
+      {
+        "id": "legacy-card",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.668,
+        "routes": {}
+      },
+      {
+        "id": "legacy-list",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.942,
+        "routes": {}
+      },
+      {
+        "id": "legacy-links",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.444,
+        "routes": {}
+      },
+      {
+        "id": "page-called",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.139,
+        "routes": {}
+      },
+      {
+        "id": "build-website",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.113,
+        "routes": {}
+      },
+      {
+        "id": "homepage-for",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.112,
+        "routes": {}
+      },
+      {
+        "id": "polite-design",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.111,
+        "routes": {}
+      },
+      {
+        "id": "different-title",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.114,
+        "routes": {}
+      },
+      {
+        "id": "nav-creation",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.246,
+        "routes": {}
+      },
+      {
+        "id": "nav-color-request",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.898,
+        "routes": {}
+      },
+      {
+        "id": "nav-spelling",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.249,
+        "routes": {}
+      },
+      {
+        "id": "multipart",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.562,
+        "routes": {}
+      },
+      {
+        "id": "conjunctions",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.136,
+        "routes": {}
+      },
+      {
+        "id": "placement",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.404,
+        "routes": {}
+      },
+      {
+        "id": "rounded-button",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.35,
+        "routes": {}
+      },
+      {
+        "id": "dark-background",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.418,
+        "routes": {}
+      },
+      {
+        "id": "responsive",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.241,
+        "routes": {}
+      },
+      {
+        "id": "ordinal-cards",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.532,
+        "routes": {}
+      },
+      {
+        "id": "pronoun",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.424,
+        "routes": {}
+      },
+      {
+        "id": "quoted-punctuation",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.179,
+        "routes": {}
+      },
+      {
+        "id": "missing-image",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": false,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.243,
+        "routes": {}
+      },
+      {
+        "id": "ambiguous-button",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": false,
+        "phases": [
+          "syntax",
+          "syntax",
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.464,
+        "routes": {}
+      },
+      {
+        "id": "ambiguous-it",
+        "negative": true,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": null,
+        "compiler_success": true,
+        "output_correct": null,
+        "safe_rejection": false,
+        "correct_rejection": false,
+        "phases": [],
+        "latency_ms": 1.509,
+        "routes": {}
+      },
+      {
+        "id": "backend",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": false,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.299,
+        "routes": {}
+      },
+      {
+        "id": "authentication",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": false,
+        "phases": [
+          "syntax"
+        ],
+        "latency_ms": 0.29,
+        "routes": {}
+      },
+      {
+        "id": "unsafe-url",
+        "negative": true,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "type",
+          "semantic"
+        ],
+        "latency_ms": 0.391,
+        "routes": {}
+      },
+      {
+        "id": "html-text",
+        "negative": false,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": false,
+        "compiler_success": false,
+        "output_correct": false,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [
+          "syntax",
+          "syntax"
+        ],
+        "latency_ms": 0.256,
+        "routes": {}
+      }
+    ]
+  },
+  "hybrid": {
+    "metrics": {
+      "interpreted": {
+        "correct": 24,
+        "total": 24,
+        "percent": 100.0
+      },
+      "valid_dsl": {
+        "correct": 24,
+        "total": 24,
+        "percent": 100.0
+      },
+      "extraction_correct": {
+        "correct": 24,
+        "total": 24,
+        "percent": 100.0
+      },
+      "compiler_success": {
+        "correct": 24,
+        "total": 24,
+        "percent": 100.0
+      },
+      "output_correct": {
+        "correct": 24,
+        "total": 24,
+        "percent": 100.0
+      },
+      "safe_rejection": {
+        "correct": 6,
+        "total": 6,
+        "percent": 100.0
+      },
+      "correct_rejection": {
+        "correct": 6,
+        "total": 6,
+        "percent": 100.0
+      },
+      "average_latency_ms": 1.135
+    },
+    "cases": [
+      {
+        "id": "legacy-title",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.505,
+        "routes": {
+          "deterministic": 1
+        }
+      },
+      {
+        "id": "legacy-text",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.493,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "legacy-button",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.448,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "legacy-card",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.441,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "legacy-list",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.912,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "legacy-links",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.467,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "page-called",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.536,
+        "routes": {
+          "offline": 1
+        }
+      },
+      {
+        "id": "build-website",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.345,
+        "routes": {
+          "offline": 1
+        }
+      },
+      {
+        "id": "homepage-for",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.347,
+        "routes": {
+          "offline": 1
+        }
+      },
+      {
+        "id": "polite-design",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.339,
+        "routes": {
+          "offline": 1
+        }
+      },
+      {
+        "id": "different-title",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.358,
+        "routes": {
+          "offline": 1
+        }
+      },
+      {
+        "id": "nav-creation",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 2.451,
+        "routes": {
+          "offline": 2
+        }
+      },
+      {
+        "id": "nav-color-request",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.726,
+        "routes": {
+          "deterministic": 2,
+          "offline": 1
+        }
+      },
+      {
+        "id": "nav-spelling",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.69,
+        "routes": {
+          "offline": 2
+        }
+      },
+      {
+        "id": "multipart",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 2.583,
+        "routes": {
+          "offline": 3,
+          "deterministic": 1
+        }
+      },
+      {
+        "id": "conjunctions",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.853,
+        "routes": {
+          "offline": 4
+        }
+      },
+      {
+        "id": "placement",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 2.401,
+        "routes": {
+          "offline": 3
+        }
+      },
+      {
+        "id": "rounded-button",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.714,
+        "routes": {
+          "offline": 3
+        }
+      },
+      {
+        "id": "dark-background",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.685,
+        "routes": {
+          "offline": 2,
+          "deterministic": 1
+        }
+      },
+      {
+        "id": "responsive",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.802,
+        "routes": {
+          "offline": 2
+        }
+      },
+      {
+        "id": "ordinal-cards",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.425,
+        "routes": {
+          "offline": 2,
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "pronoun",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.952,
+        "routes": {
+          "offline": 2,
+          "deterministic": 1
+        }
+      },
+      {
+        "id": "quoted-punctuation",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 0.834,
+        "routes": {
+          "offline": 2
+        }
+      },
+      {
+        "id": "missing-image",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "clarification"
+        ],
+        "latency_ms": 0.794,
+        "routes": {
+          "offline": 1,
+          "rejected": 1
+        }
+      },
+      {
+        "id": "ambiguous-button",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "clarification"
+        ],
+        "latency_ms": 2.486,
+        "routes": {
+          "offline": 4
+        }
+      },
+      {
+        "id": "ambiguous-it",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "clarification",
+          "clarification"
+        ],
+        "latency_ms": 2.365,
+        "routes": {
+          "deterministic": 3
+        }
+      },
+      {
+        "id": "backend",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "unsupported"
+        ],
+        "latency_ms": 0.519,
+        "routes": {
+          "deterministic": 1,
+          "rejected": 1
+        }
+      },
+      {
+        "id": "authentication",
+        "negative": true,
+        "interpreted": false,
+        "valid_dsl": false,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "unsupported"
+        ],
+        "latency_ms": 0.694,
+        "routes": {
+          "deterministic": 1,
+          "rejected": 1
+        }
+      },
+      {
+        "id": "unsafe-url",
+        "negative": true,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": null,
+        "compiler_success": false,
+        "output_correct": null,
+        "safe_rejection": true,
+        "correct_rejection": true,
+        "phases": [
+          "type"
+        ],
+        "latency_ms": 0.765,
+        "routes": {
+          "deterministic": 2
+        }
+      },
+      {
+        "id": "html-text",
+        "negative": false,
+        "interpreted": true,
+        "valid_dsl": true,
+        "extraction_correct": true,
+        "compiler_success": true,
+        "output_correct": true,
+        "safe_rejection": null,
+        "correct_rejection": null,
+        "phases": [],
+        "latency_ms": 1.13,
+        "routes": {
+          "offline": 2
+        }
+      }
+    ]
+  }
+}
