@@ -1,7 +1,7 @@
 :root { color-scheme:light; --ink:#17253a; --muted:#5b6b80; --line:#dce3ed; --accent:#2563eb; --canvas:#f1f4f9; font:16px/1.5 "Segoe UI",Arial,sans-serif; color:var(--ink); background:var(--canvas); }
 * { box-sizing:border-box; }
 body { margin:0; }
-button,input,textarea { font:inherit; }
+button,input,textarea,select { font:inherit; }
 a { color:inherit; }
 button,a,summary { -webkit-tap-highlight-color:transparent; }
 svg { flex-shrink:0; vertical-align:middle; }
@@ -137,3 +137,35 @@ td code { font:14px/1.6 Consolas,monospace; white-space:pre-wrap; overflow-wrap:
 .followup-form { padding: 20px; border-top: 1px solid #cbd5e1; display: grid; gap: 12px; }
 .followup-form p { margin: 0; line-height: 1.5; }
 .followup-form textarea { width: 100%; min-width: 0; padding: 12px; font: inherit; border: 1px solid #64748b; border-radius: 6px; resize: vertical; }
+/* The assistant is a separate workspace panel, never an editor overlay. */
+.workspace { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"editor preview"; }
+.workspace:has(> .assistant-panel) { grid-template-columns:minmax(0,1fr) minmax(270px,.58fr) minmax(0,1fr); grid-template-areas:"editor assistant preview"; }
+.editor-panel { grid-area:editor; }
+.preview-panel { grid-area:preview; }
+.assistant-panel { grid-area:assistant; align-self:start; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; }
+.assistant-panel .panel-heading { background:#f8faff; }
+.assistant-content { padding:16px; font-size:14px; }
+.assistant-content h3 { margin:0 0 10px; font-size:14px; font-weight:650; }
+.assistant-intro,.assistant-footnote { margin:0 0 14px; color:var(--muted); line-height:1.6; }
+.assistant-editor { margin:0 0 12px; color:#345886; font-size:12px; font-weight:600; }
+.assistant-current { padding:12px; background:#f5f7fb; border:1px solid var(--line); border-radius:6px; }
+.assistant-current h3 { color:var(--muted); font-size:12px; margin-bottom:6px; }
+#assistant-current-text { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+#assistant-status { color:#79531d; padding:10px 0; margin:0; font-size:13px; }
+#assistant-status[data-status="supported"] { color:#17683f; }
+.assistant-suggestion { margin:0 0 12px; padding:12px; border:1px solid #cbdaf2; border-radius:6px; background:#f8fbff; }
+.assistant-caption { font-size:12px; font-weight:600; color:#45618a; margin:0 0 6px; }
+.assistant-content code { display:block; font:13px/1.6 Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:10px; }
+.assistant-note,#assistant-builder-note { color:var(--muted); font-size:12px; margin:6px 0 12px; }
+.assistant-actions { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.assistant-action { border:1px solid #d1dae6; background:#fff; color:#334760; padding:6px 9px; border-radius:5px; cursor:pointer; font-size:12px; }
+.assistant-action:hover { background:#eef4ff; }
+.assistant-action[aria-pressed="true"] { background:#eaf1ff; border-color:#2563eb; color:#1d4ed8; }
+.assistant-builder { border-top:1px solid var(--line); padding-top:16px; }
+#assistant-fields label { display:block; margin-bottom:5px; color:#3e536f; font-size:12px; font-weight:600; }
+#assistant-fields input,#assistant-fields select { width:100%; min-width:0; margin-bottom:12px; padding:8px; border:1px solid #bdcadb; border-radius:5px; background:white; color:var(--ink); font-size:13px; }
+#assistant-builder-result { margin-top:6px; }
+#assistant-insert { width:100%; font-size:13px; }
+.assistant-footnote { font-size:12px; border-top:1px solid var(--line); padding-top:14px; margin:16px 0 0; }
+@media(max-width:1250px) { .workspace:has(> .assistant-panel) { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"editor preview" "assistant assistant"; } .assistant-panel { position:static; max-height:none; } }
+@media(max-width:900px) { .workspace { grid-template-columns:minmax(0,1fr); grid-template-areas:"editor" "preview"; } .workspace:has(> .assistant-panel) { grid-template-columns:minmax(0,1fr); grid-template-areas:"editor" "assistant" "preview"; } }

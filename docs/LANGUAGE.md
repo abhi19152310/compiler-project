@@ -175,7 +175,7 @@ pixels`, and `Give the heading a font size of 32 pixels` normalize to the same D
 
 | Category | Supported properties / values |
 | --- | --- |
-| Color | `color`, `text-color`, `background-color`, `border-color`: blue, red, green, black, white, grey/gray, light-grey/light-gray, or six-digit hex |
+| Color | `color`, `text-color`, `background-color`, `border-color`: blue, red, green, yellow, orange, purple, black, white, grey/gray, light-grey/light-gray, or six-digit hex |
 | Typography | `font-family`: arial, serif, sans-serif, monospace, system-ui; `font-size`; `font-weight`: normal/bold/400/500/600/700; `text-align`: left/right/center/justify; `line-height`: 1–3; `text-decoration`: none/underline/line-through |
 | Dimensions | width/height and min-/max- versions; margin/padding and top/right/bottom/left versions; gap; border-radius; border-width |
 | Layout | display: block/flex/grid; flex-direction: row/column; flex-wrap: wrap/nowrap; align-items; align-self; justify-content; columns: 1–12; order: -100–100 |
@@ -276,3 +276,19 @@ or arbitrary CSS is implemented.
 See the four complete examples: `college-event.sp`, `personal-portfolio.sp`,
 `service-landing.sp` and `contact-page.sp`. Browser tests check all four at 375,
 768 and 1440 CSS pixels; this does not guarantee every user-defined layout fits.
+
+
+### Common English creation and background instructions
+
+The offline English interpreter supports `Make a webpage named abhi.` and
+`Make a navbar with Home, About and Contact.` Both `color` and `colour` work
+in background instructions, such as `Change the background colour to purple.`
+An omitted background target means the page. `Make it yellow.` after creating
+navigation changes that navigation's background. Missing page titles, navigation
+labels, or background colors request clarification.
+
+Yellow (`#ffff00`), orange (`#ffa500`) and purple (`#800080`) are native named
+colors. Buttons, page backgrounds and navigation links choose readable default
+foregrounds: dark text for yellow/orange and white text for purple. Explicit text
+colors remain subject to the contrast check. Automatic page text colors update
+with later background changes, including saved-page follow-ups.

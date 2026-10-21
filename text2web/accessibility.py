@@ -1,21 +1,10 @@
 """Checks for accessible names, safe image sources, and text contrast."""
 
 from .assets import local_asset_path
-from .properties import COLORS, CONTAINERS, color
+from .properties import COLORS, CONTAINERS, color, contrast as _contrast, readable_foreground
 from .model import CompilationResult, Diagnostic, Element
 
 WHITE = "#ffffff"
-
-
-def _luminance(color: str) -> float:
-    channels = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
-    linear = [value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4 for value in channels]
-    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
-
-
-def _contrast(first: str, second: str) -> float:
-    lighter, darker = sorted((_luminance(first), _luminance(second)), reverse=True)
-    return (lighter + 0.05) / (darker + 0.05)
 
 
 def _check_image(element: Element, result: CompilationResult) -> None:
@@ -85,7 +74,7 @@ def check_accessibility(result: CompilationResult) -> None:
         color_name = element.properties.get("color", foreground)
         if element.type in {"button", "submit"} and "color" in element.properties:
             background = color(element.properties.get("background-color", color_name))
-            foreground = color(element.properties.get("text-color", "black" if color_name == "white" else "white"))
+            foreground = color(element.properties.get("text-color", readable_foreground(background)))
         # Background images cannot be evaluated by a solid-color contrast check.
         if any("background-image" in p for p in ancestry):
             continue

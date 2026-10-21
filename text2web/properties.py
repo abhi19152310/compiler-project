@@ -8,6 +8,7 @@ from .assets import local_asset_path
 COLORS = {
     "dark-green": "#14532d", "dark-blue": "#1e3a8a", "light-blue": "#dbeafe",
     "blue": "#2b6cb0", "red": "#b91c1c", "green": "#166534",
+    "yellow": "#ffff00", "orange": "#ffa500", "purple": "#800080",
     "black": "#111827", "white": "#ffffff", "grey": "#64748b",
     "gray": "#64748b", "light-grey": "#f1f5f9", "light-gray": "#f1f5f9",
 }
@@ -62,6 +63,22 @@ def valid_url(value: str, *, image: bool = False) -> bool:
 
 def color(value: str) -> str:
     return COLORS.get(value, value)
+
+
+def luminance(value: str) -> float:
+    value = color(value)
+    channels = [int(value[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    linear = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in channels]
+    return sum(v * weight for v, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+
+def contrast(first: str, second: str) -> float:
+    light, dark = sorted((luminance(first), luminance(second)), reverse=True)
+    return (light + 0.05) / (dark + 0.05)
+
+
+def readable_foreground(background: str) -> str:
+    return max(('white', 'black'), key=lambda candidate: contrast(candidate, background))
 
 
 def validate_property(kind: str, key: str, value: str) -> str | None:

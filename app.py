@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 from uuid import uuid4
 
-from flask import Flask, abort, make_response, render_template, request, send_from_directory
+from flask import Flask, abort, jsonify, make_response, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
 from text2web import compile_source, compile_update
@@ -12,6 +12,7 @@ from text2web.codegen import write_output
 from text2web.assets import IMAGE_EXTENSIONS, is_supported_image, local_asset_path
 from text2web.nlp import interpreter_from_env
 from text2web.workspace import StaleRevision, WorkspaceStore
+from text2web.writing_assistant import catalog as assistant_catalog, suggest
 
 ROOT = Path(__file__).resolve().parent
 MAX_SOURCE_BYTES = 128 * 1024
@@ -35,12 +36,19 @@ def _read_image_uploads():
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.update(MAX_CONTENT_LENGTH=10 * 1024 * 1024, OUTPUT_ROOT=ROOT / "build" / "web")
+    app.config.update(MAX_CONTENT_LENGTH=10 * 1024 * 1024, OUTPUT_ROOT=ROOT / "build" / "web",
+                      TEMPLATES_AUTO_RELOAD=True, SEND_FILE_MAX_AGE_DEFAULT=0)
     if test_config:
         app.config.update(test_config)
     interpreter = app.config.get('NLP_CONVERTER') or interpreter_from_env()
     store = WorkspaceStore(app.config.get('STATE_DB', Path(app.config['OUTPUT_ROOT']).parent / 'workspaces.sqlite3'))
     app.extensions['workspace_store'] = store
+
+    @app.context_processor
+    def versioned_assets():
+        def asset_url(filename):
+            return url_for('static', filename=filename, v=(ROOT / 'static' / filename).stat().st_mtime_ns)
+        return {'asset_url': asset_url}
 
     @app.route("/", methods=["GET", "POST"])
     def index():
@@ -118,10 +126,46 @@ def create_app(test_config=None):
             result=result, build_id=build_id, file_error=file_error,
             has_workspace=bool(saved), revision=revision, followup_source=followup_source, nlp_label=interpreter.label,
             is_followup=request.method == 'POST' and request.form.get('mode') == 'update',
+            assistant_catalog=assistant_catalog(),
             debug=result.debug_data() if result else None,
         ))
         if saved:
             response.set_cookie('text2web_workspace', workspace_key, httponly=True, samesite='Lax', max_age=30 * 24 * 3600)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+
+    @app.post('/api/writing-assistant')
+    def writing_assistant():
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or not isinstance(data.get('source'), str):
+            return jsonify(error='Supply the editor text.'), 400
+        source, cursor = data['source'], data.get('cursor', 0)
+        try:
+            source_size = len(source.encode('utf-8'))
+            cursor_limit = len(source.encode('utf-16-le')) // 2
+        except UnicodeError:
+            return jsonify(error='Use valid Unicode text.'), 400
+        if source_size > MAX_SOURCE_BYTES:
+            return jsonify(error='Editor text cannot exceed 128 KB.'), 400
+        if isinstance(cursor, bool) or not isinstance(cursor, int) or not 0 <= cursor <= cursor_limit:
+            return jsonify(error='The editor cursor is outside the text.'), 400
+        mode = data.get('mode', 'new')
+        if mode not in {'new', 'update'} or data.get('template') is not None and not isinstance(data['template'], str):
+            return jsonify(error='Choose a supported editor and action.'), 400
+        values = data.get('values', {})
+        if not isinstance(values, dict) or any(not isinstance(v, str) or len(v) > 4096 for v in values.values()):
+            return jsonify(error='Use text values in the instruction fields.'), 400
+        previous = None
+        if mode == 'update':
+            key = request.cookies.get('text2web_workspace', '')
+            saved = store.load(key) if re.fullmatch(r'[0-9a-f]{32}', key) else None
+            previous = saved['result'] if saved else None
+        try:
+            guidance = suggest(source, cursor, previous=previous, mode=mode, template=data.get('template'), values=values)
+        except (ValueError, UnicodeError):
+            return jsonify(error='Finish the quoted text, then try a supported instruction.'), 400
+        response = jsonify(guidance)
+        response.headers['Cache-Control'] = 'no-store'
         return response
 
     @app.get("/build/<build_id>/<path:filename>")

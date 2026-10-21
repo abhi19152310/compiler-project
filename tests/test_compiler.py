@@ -92,7 +92,7 @@ def test_unresolved_reference_is_error():
 
 @pytest.mark.parametrize("instruction", [
     'Add a heading that says Hello.',
-    'Add a purple button that says "Go".',
+    'Add a chartreuse button that says "Go".',
     'Add a blue big button that says "Go".',
     'Make it italic.',
     'Add an image "logo.png".',

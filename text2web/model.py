@@ -70,6 +70,7 @@ class CompilationResult:
     html: str | None = None
     css: str | None = None
     page_properties: dict[str, str] = field(default_factory=dict)
+    auto_page_foreground: bool = False
     focus_id: str | None = None
     focus_explicit: bool = False
     interpretations: list[dict] = field(default_factory=list)

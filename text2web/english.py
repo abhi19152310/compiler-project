@@ -7,9 +7,12 @@ parser and receive a diagnostic; this layer does not invent page copy.
 import json
 import re
 
+from .properties import COLORS
+
 Q = r'"(?:[^"\\\r\n]|\\.)*"'
 TYPES = r'header|navigation bar|breadcrumb navigation|nav|main(?: content| section)?|section|footer|aside|hero(?: section)?|container|card|heading|paragraph|button|image|link|form|input|textarea|select|label|list item|ordered list|unordered list|table|row|cell'
 ALIASES = {"navigation bar": "nav", "breadcrumb navigation": "nav", "main content": "main", "main section": "main",
+           "navbar": "nav", "nav bar": "nav", "webpage": "page", "web page": "page", "website": "page",
            "hero section": "hero", "list item": "li", "ordered list": "ol", "unordered list": "ul", "row": "tr", "cell": "td", "submit button": "submit"}
 NUMBERS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
 
@@ -78,6 +81,10 @@ def expand_english(source: str) -> list[str] | None:
 
     def match(pattern):
         return re.fullmatch(pattern, s, re.I)
+
+    colors = '|'.join(re.escape(k).replace(r'\-', '[- ]') for k in sorted(COLORS, key=len, reverse=True)) + '|#[0-9a-fA-F]{6}'
+    if m := match(rf'(?:change|set|make) (?:the )?(?:(.+?)(?:\'s)? )?background(?: colou?r)? (?:to )?({colors})'):
+        return [configure(ref(m[1]) if m[1] else 'page', 'background-color', m[2].lower().replace(' ', '-'))]
 
     # Explicit containment can wrap any supported creation instruction.
     quoted_spans = [(q.start(), q.end()) for q in re.finditer(Q, s)]

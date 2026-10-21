@@ -40,7 +40,7 @@ REFERENCE: /(?:it|this)\b/
 BOLD: /bold\b/
 FONT: /(?:arial|serif|sans-serif)\b/
 SIZE: /(?:small|medium|big)\b/
-COLOR: /(?:blue|red|green|black|white)\b/
+COLOR: /(?:blue|red|green|black|white|yellow|orange|purple)\b/
 PUT: /put\b/
 TO: /to\b/
 DIRECTION: /(?:left|right|above|below)\b/

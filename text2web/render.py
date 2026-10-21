@@ -3,7 +3,7 @@
 from html import escape
 import re
 
-from .properties import CSS_KEYS, SIZES, color
+from .properties import CSS_KEYS, SIZES, color, readable_foreground
 
 TAGS = {"heading": "h1", "paragraph": "p", "image": "img", "link": "a", "container": "div",
         "card": "article", "hero": "section", "submit": "button"}
@@ -55,7 +55,7 @@ def declarations(props, kind):
             output[key] = color(value) if key.endswith("color") else value
     if kind in {"button", "submit"} and "color" in props:
         output["background-color"] = color(props.get("background-color", props["color"]))
-        output["color"] = color(props.get("text-color", "black" if props["color"] == "white" else "white"))
+        output["color"] = color(props.get("text-color", readable_foreground(output["background-color"])))
     if props.get("responsive") == "true":
         output["max-width"] = "100%"
         if kind == "image":

@@ -315,3 +315,54 @@ def test_failed_semantics_and_raw_bad_selectors_never_crash():
         result = compile_update(previous, source)
         assert not result.success and result.html is None
     assert previous.symbols[0].properties == {}
+
+
+@pytest.mark.parametrize('spelling', ['color', 'colour'])
+@pytest.mark.parametrize('shade,foreground', [('yellow', 'black'), ('orange', 'black'), ('purple', 'white')])
+def test_make_webpage_navbar_and_background_spellings(spelling, shade, foreground):
+    result = valid(f'make a webpage named abhi. change the background {spelling} to {shade}. make a navbar with home,about,contact. make it {shade}. Add a paragraph that says "Welcome".')
+    assert result.page_tree.title == 'abhi'
+    assert result.page_properties == {'background-color': shade, 'text-color': foreground}
+    nav = next(e for e in result.symbols if e.type == 'nav')
+    assert nav.properties['background-color'] == shade
+    assert all(e.properties['text-color'] == foreground for e in result.symbols if e.type == 'link')
+
+
+@pytest.mark.parametrize('instruction', [
+    'make background colour yellow', 'make webpage background colour yellow',
+    'make the webpage background color yellow', 'change the background to yellow',
+    'change background color to yellow', 'set the page background colour to yellow',
+])
+def test_background_wording(instruction):
+    result = valid('make a webpage named abhi. ' + instruction + '.')
+    assert result.page_properties['background-color'] == 'yellow'
+
+
+@pytest.mark.parametrize('shade,foreground', [('yellow', '#111827'), ('orange', '#111827'), ('purple', '#ffffff')])
+@pytest.mark.parametrize('expanded', [False, True])
+def test_named_button_colors_in_both_renderers(shade, foreground, expanded):
+    source = f'Create a page titled "Demo". Add a {shade} button that says "Go".'
+    if expanded:
+        source += ' Set the button padding to 12px.'
+    result = compile_source(source)
+    assert result.success, result.diagnostics
+    assert f'color: {foreground}' in result.css
+
+
+def test_automatic_page_foreground_survives_saved_followup():
+    from dataclasses import asdict
+    from text2web.workspace import restore
+    first = valid('make a webpage named abhi. change the background to purple. Add a paragraph that says "Welcome".')
+    updated = compile_update(restore(asdict(first)), 'change the background to yellow', nlp_converter=NaturalInterpreter())
+    assert updated.success, updated.diagnostics
+    assert updated.page_properties['text-color'] == 'black'
+    explicit = compile_update(updated, 'Set the page text-color to white. change the background to yellow.', nlp_converter=NaturalInterpreter())
+    assert not explicit.success
+    assert any(d.phase == 'accessibility' for d in explicit.diagnostics)
+
+
+def test_incomplete_make_requests_clarify():
+    for instruction, word in [('make a webpage', 'called'), ('make a navbar', 'labels'), ('change the background', 'color')]:
+        result = natural(instruction)
+        assert not result.success
+        assert any(word in d.message for d in result.diagnostics), result.diagnostics

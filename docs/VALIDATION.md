@@ -1,4 +1,33 @@
+Current follow-up validation: **360 passed, 1 optional live-model test skipped**.
+This covers native make-webpage/navbar phrases, background color/colour variants,
+yellow/orange/purple in both renderers, readable automatic text colors across saved
+follow-ups, partial-create live suggestions, versioned assets, and the layout
+fallback when an older template lacks the assistant. Tests ran in real Chrome
+where browser interaction was required.
+
 # Project validation
+
+## Writing Assistant: latest results
+
+The separate Writing Assistant enhancement completed with **338 passed, 1 skipped
+in 19.47 seconds** on 2026-10-21. The skipped test is still the optional real-model
+test. Writing assistance runs entirely offline and does not require that model.
+
+The 58 added checks comprise 52 Python/compiler/API tests and six Chrome interaction
+and viewport tests. They verify the real four-line Abhi request can be corrected
+one instruction at a time, surrounding text is preserved, page and follow-up editors
+stay separate, templates produce valid compiler inputs, custom hex colors work,
+missing image fields and unsafe values disable insertion, ambiguous targets are not
+guessed, and stale suggestions cannot overwrite newer text. Unicode cursor offsets,
+quoted punctuation, semicolons, preceding-context focus and duplicate page titles
+are covered. API tests confirm no model calls, output writes or saved revisions
+occur while requesting guidance. Layout checks cover 375, 768, 1200 and 1440px.
+
+SQLite connections now close explicitly after workspace reads and transactions,
+including frequent reads for follow-up suggestions. Existing persistence and
+revision tests continue to pass. A real UI screenshot is available locally at
+`build/writing-assistant.png`; setup and behavior are documented in
+[WRITING_ASSISTANT.md](WRITING_ASSISTANT.md).
 
 ## NLP-assisted enhancement: latest results
 

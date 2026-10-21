@@ -5,6 +5,11 @@ local Ollama model fallback. See [NLP architecture and setup](docs/NLP_ARCHITECT
 for the schema, compiler boundaries, model configuration, persistent state and
 evaluation details. Offline mode is enabled by default and requires no model API.
 
+The editor also includes a separate [Writing Assistant](docs/WRITING_ASSISTANT.md)
+panel with live wording suggestions, clickable templates and supported component,
+color and size choices. Suggestions change only the current instruction after an
+explicit click; they also work in the follow-up editor.
+
 Text2Web compiles a controlled-English language into actual `index.html`
 and `style.css` files. It has a Lark LALR parser, symbol-table references,
 layout-cycle checks, selected accessibility checks, an optimized page-tree IR,

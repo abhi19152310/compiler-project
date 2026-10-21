@@ -17,8 +17,9 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111b2e">
   <title>Text2Web | Compiler workspace</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ asset_url('app.css') }}">
+  <script src="{{ asset_url('app.js') }}" defer></script>
+  <script src="{{ asset_url('writing-assistant.js') }}" defer></script>
 </head>
 <body>
   <header class="app-header"><div class="header-inner"><a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">{{ icon('code') }}</span>Text2Web</a><span class="prototype-badge">Controlled-English compiler</span><a class="guide-link" href="#sentence-guide">Sentence guide</a></div></header>
@@ -40,7 +41,7 @@
         <form method="post" id="compile-form" enctype="multipart/form-data"><input type="hidden" name="mode" value="new">
           <div class="editor-toolbar"><label for="source">instructions.sp</label><span>Plain text</span></div>
           <div class="source-editor"><pre id="line-numbers" aria-hidden="true">{% for number in range(1, (source.splitlines()|length or 1) + 1) %}{{ number }}{{ '\n' if not loop.last else '' }}{% endfor %}</pre><textarea id="source" name="source" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="source-help" placeholder='Create a page titled "My Page".'>{{ source }}</textarea></div>
-          <div class="editor-meta"><span id="line-count">{{ source.splitlines()|length }} lines</span><span id="source-help">Use sentences or combine instructions with ?and then? &middot; UTF-8</span></div>
+          <div class="editor-meta"><span id="line-count">{{ source.splitlines()|length }} lines</span><span id="source-help">Use the Writing Assistant for supported wording &middot; UTF-8</span></div>
           <div class="asset-upload"><label for="assets">Local images <span>(optional; names must match image paths)</span></label><input id="assets" name="assets" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" multiple></div>
           <div class="compile-actions"><button class="button button-primary" id="compile-button" type="submit">{{ icon('play') }} <span>Compile Webpage</span></button><span class="shortcut"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span></div>
         </form>
@@ -56,6 +57,26 @@
         </form>
         {% endif %}
       </section>
+      <aside class="panel assistant-panel" id="writing-assistant" aria-labelledby="assistant-title" data-endpoint="{{ url_for('writing_assistant') }}">
+        <div class="panel-heading"><div><h2 id="assistant-title">Writing Assistant</h2><span class="panel-subtitle">Supported wording, one step at a time</span></div></div>
+        <div class="assistant-content">
+          <p class="assistant-intro">Type in either editor. Suggestions appear here and change your text only when you apply them.</p>
+          <p id="assistant-editor" class="assistant-editor">Helping with: page instructions</p>
+          <div class="assistant-current"><h3>Current instruction</h3><p id="assistant-current-text">Select an instruction in the editor.</p></div>
+          <p id="assistant-status" role="status" aria-live="polite">Choose an action below, or start typing.</p>
+          <div id="assistant-suggestions" aria-label="Suggested instructions"></div>
+          <div class="assistant-builder">
+            <h3>Build an instruction</h3>
+            <div id="assistant-actions" class="assistant-actions" aria-label="Instruction actions">
+              {% for item in assistant_catalog %}<button type="button" class="assistant-action" data-assistant-template="{{ item.id }}" aria-pressed="false">{{ item.label }}</button>{% endfor %}
+            </div>
+            <div id="assistant-fields"></div>
+            <div id="assistant-builder-result" hidden><p class="assistant-caption">Supported instruction</p><code id="assistant-builder-text"></code><p id="assistant-builder-note"></p><button type="button" class="button button-primary" id="assistant-insert" disabled>Insert instruction</button></div>
+          </div>
+          <p class="assistant-footnote">Only supported patterns and values are suggested. Compilation still checks the full page. Image files must exist; forms are static previews.</p>
+          <noscript><p>Enable JavaScript for live suggestions. The sentence guide below remains available.</p></noscript>
+        </div>
+      </aside>
       <section class="panel preview-panel" aria-labelledby="preview-title" data-tab-group>
         <div class="panel-heading"><div><h2 id="preview-title">Webpage output</h2><span class="panel-subtitle">Preview and generated files</span></div><span class="output-badge">{{ 'Generated' if build_id else 'Awaiting output' }}</span></div>
         <div class="tabs output-tabs" role="tablist" aria-label="Webpage output">
@@ -97,9 +118,10 @@
         {% if result and debug['page_tree'] %}<pre>{{ debug['page_tree']|tojson(indent=2) }}</pre>{% else %}<p class="no-data">{{ 'No page tree was produced for this compilation.' if result else 'The page-tree IR will appear after semantic checks pass.' }}</p>{% endif %}
       </div>
     </section>
-    <details class="sentence-guide" id="sentence-guide"><summary>Supported sentence guide</summary><div class="guide-content"><div><h3>Ordinary English</h3><code>Create a web page called Abhishek.</code><code>Build me a website named Techno Fest.</code><code>Add a green navbar with Home, About and Contact.</code><code>Add a Register button below the navbar.</code><code>Make the button rounded.</code><p>Offline English covers common patterns. Configure Ollama for model-assisted paraphrases. Images still need a real source and description; ambiguous targets need clarification.</p><h3>Start with a page title</h3><code>Create a page titled "Techno Fest".</code><h3>Add content</h3><code>Add a big heading that says "Techno 2026".</code><code>Add a paragraph that says "Welcome".</code><code>Add a blue button that says "Register".</code><code>Add an image "stage.png" described as "Main stage".</code><code>Make it bold.</code><code>Make it Arial.</code><code>Put it to the left of the heading.</code><h3>Build complete pages</h3><code>Create a navigation bar with Home, About and Contact links.</code><code>Create a main named "content".</code><code>Create a link labelled "Visit GitHub" to "https://github.com" inside "content".</code><code>Create three cards for Web Development, AI and Cloud Computing.</code><code>Put all the cards inside one container.</code><code>Stack the cards vertically on mobile.</code><code>Give all cards consistent spacing and rounded corners.</code><code>Create a contact form with name, email and message fields.</code><code>Make the email field required.</code><code>Set the heading font-size to 32 pixels.</code></div><div><h3>Supported options</h3><p>Elements: heading, paragraph, button, image, link, header, nav, main, section, footer, aside, container, card, lists, tables and static forms. Sizes: small, medium, big. Colors: blue, red, green, black, white. Put size before color.</p><p>&quot;Add&quot;, &quot;create&quot;, and &quot;insert&quot; are equivalent. &quot;It&quot; and &quot;this&quot; refer to the last introduced element. Position images or other elements left, right, above, or below the latest matching element type. Use named elements and &quot;inside&quot; for nesting. Supply actual list items, descriptions and dropdown options; missing content produces an error.</p><p>Defaults: rounded corners are 12px; card spacing is 24px; mobile stacking starts at 640px. The full property whitelist and English patterns are documented in docs/LANGUAGE.md in the project.</p><p>Images need a description unless explicitly decorative. Selected solid-color checks enforce a 4.5:1 contrast minimum; this is not a complete accessibility audit. Navigation links use real destinations. Forms are static inert previews with disabled submit buttons; submission, authentication and storage are not connected. Generated action buttons are visual only.</p></div></div></details>
+    <details class="sentence-guide" id="sentence-guide"><summary>Supported sentence guide</summary><div class="guide-content"><div><h3>Ordinary English</h3><code>Create a web page called Abhishek.</code><code>Build me a website named Techno Fest.</code><code>Add a green navbar with Home, About and Contact.</code><code>Add a Register button below the navbar.</code><code>Make the button rounded.</code><p>Offline English covers common patterns. Configure Ollama for model-assisted paraphrases. Images still need a real source and description; ambiguous targets need clarification.</p><h3>Start with a page title</h3><code>Create a page titled "Techno Fest".</code><h3>Add content</h3><code>Add a big heading that says "Techno 2026".</code><code>Add a paragraph that says "Welcome".</code><code>Add a blue button that says "Register".</code><code>Add an image "stage.png" described as "Main stage".</code><code>Make it bold.</code><code>Make it Arial.</code><code>Put it to the left of the heading.</code><h3>Build complete pages</h3><code>Create a navigation bar with Home, About and Contact links.</code><code>Create a main named "content".</code><code>Create a link labelled "Visit GitHub" to "https://github.com" inside "content".</code><code>Create three cards for Web Development, AI and Cloud Computing.</code><code>Put all the cards inside one container.</code><code>Stack the cards vertically on mobile.</code><code>Give all cards consistent spacing and rounded corners.</code><code>Create a contact form with name, email and message fields.</code><code>Make the email field required.</code><code>Set the heading font-size to 32 pixels.</code></div><div><h3>Supported options</h3><p>Elements: heading, paragraph, button, image, link, header, nav, main, section, footer, aside, container, card, lists, tables and static forms. Sizes: small, medium, big. Colors: blue, red, green, yellow, orange, purple, black, white. Put size before color.</p><p>&quot;Add&quot;, &quot;create&quot;, and &quot;insert&quot; are equivalent. &quot;It&quot; and &quot;this&quot; refer to the last introduced element. Position images or other elements left, right, above, or below the latest matching element type. Use named elements and &quot;inside&quot; for nesting. Supply actual list items, descriptions and dropdown options; missing content produces an error.</p><p>Defaults: rounded corners are 12px; card spacing is 24px; mobile stacking starts at 640px. The full property whitelist and English patterns are documented in docs/LANGUAGE.md in the project.</p><p>Images need a description unless explicitly decorative. Selected solid-color checks enforce a 4.5:1 contrast minimum; this is not a complete accessibility audit. Navigation links use real destinations. Forms are static inert previews with disabled submit buttons; submission, authentication and storage are not connected. Generated action buttons are visual only.</p></div></div></details>
     <footer class="app-footer"><span>Text2Web &middot; Compiler project</span><span>Controlled English &rarr; Verified HTML &amp; CSS</span></footer>
     <template id="sample-source">{{ sample_source }}</template>
+    <script id="assistant-catalog" type="application/json">{{ assistant_catalog|tojson }}</script>
   </main>
 </body>
 </html>

@@ -51,6 +51,7 @@ def interpret(instruction, context=None):
     s = instruction.strip().removesuffix('.').strip()
     s = re.sub(r'^(?:(?:please|kindly)\s+|(?:can|could|would) you\s+)', '', s, flags=re.I)
     s = re.sub(r'^(?:build|design|generate|create|insert|show|display)\b(?: me)?', 'add', s, flags=re.I)
+    s = re.sub(r'^make(?: me)? (?=(?:a |an )?(?:web ?page|website|homepage|page)\b(?! background)|(?:a |an )?(?:navigation bar|navbar|nav bar|navigation menu|menu|nav)\b(?: with|$))', 'add ', s, flags=re.I)
     s = re.sub(r'^put (?=(?:a|an) (?:small |medium |large |big )?(?:heading|paragraph|button|card) (?:that )?(?:saying|says|reading|labelled|labeled|called)\b)', 'add ', s, flags=re.I)
     # Narrow spelling normalization in command/type words, leaving payload untouched.
     s = re.sub(r'\b(?:navigaton|naviagtion)\b', 'navigation', s, count=1, flags=re.I)
@@ -61,6 +62,13 @@ def interpret(instruction, context=None):
         return {'operations': list(operations)}
     def clarify(message):
         return result({'op': 'clarify', 'message': message})
+
+    # Parse backgrounds before generic color edits so "background" is never
+    # mistaken for a component name. An omitted target means the page.
+    if m := match(rf'(?:change|set|make) (?:the )?(?:(.+?)(?:\'s)? )?background(?: colou?r)? (?:to )?({COLOR_WORDS})'):
+        return result(style(target(m[1]) if m[1] else 'page', {'background-color': m[2].lower().replace(' ', '-')}))
+    if match(r'(?:change|set|make) (?:the )?background(?: colou?r)?'):
+        return clarify('Which background color should I use?')
 
     if m := match(r'(?:add (?:me )?(?:a |an |the )?(?:web ?page|website|homepage|page)(?: (?:called|named|titled|for))?|i (?:need|want|would like) (?:a |an )?(?:web ?page|website|homepage|page)(?: (?:called|named|titled|for))?) (.+)'):
         return result({'op': 'page', 'title': text(m[1])})
@@ -113,6 +121,8 @@ def interpret(instruction, context=None):
             value = ''
         return result(create(m[2].lower(), value), *([relation] if relation else []))
 
+    if m := match(rf'(?:change|set|make) (.+?)(?:\'s)? colou?r (?:to )?({COLOR_WORDS})'):
+        return result(style(target(m[1]), {'color': m[2].lower().replace(' ', '-')}))
     if m := match(rf'(?:make|turn|paint) (.+?) (?:to )?({COLOR_WORDS})'):
         reference, value = target(m[1]), m[2].lower().replace(' ', '-')
         return result(style(reference, {'background-color' if reference.endswith(':nav') or reference == 'nav' else 'color': value}))

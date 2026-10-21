@@ -4,7 +4,7 @@ from copy import deepcopy
 import re
 from time import perf_counter
 
-from .accessibility import _contrast, check_accessibility
+from .accessibility import check_accessibility
 from .codegen import generate
 from .intents import IntentError, safe_target
 from .layout import build_page_tree, optimize_page_tree
@@ -12,7 +12,7 @@ from .model import CompilationResult, Diagnostic, Sentence
 from .normalizer import normalize
 from .offline import target as english_target
 from .parser import parse_sentence
-from .properties import COLORS, TYPES, color
+from .properties import COLORS, TYPES, color, readable_foreground
 from .semantics import lookup, resolve, validate_relationships
 
 
@@ -77,7 +77,7 @@ def _navigation_colors(result, statements):
         if not e or e.type != 'nav' or 'background-color' not in statement.properties or 'background-color' not in e.properties:
             continue
         background = color(e.properties['background-color'])
-        foreground = 'white' if _contrast('#ffffff', background) >= 4.5 else 'black'
+        foreground = readable_foreground(background)
         for child in result.symbols:
             ancestor = by_id.get(child.parent_id)
             while ancestor and ancestor.id != e.id:
@@ -168,6 +168,12 @@ def compile_natural(source, *, converter, previous=None):
                             and (s.properties['position'] in {'left', 'right'}) == axis)]
                 result.ast.append(statement)
                 title = resolve(result, title=title, statements=[statement], finalize=False)
+                if statement.kind == 'format' and statement.reference == 'page':
+                    if any(k in statement.properties for k in {'color', 'text-color'}):
+                        result.auto_page_foreground = False
+                    elif 'background-color' in statement.properties and (result.auto_page_foreground or not any(k in result.page_properties for k in {'color', 'text-color'})):
+                        result.page_properties['text-color'] = readable_foreground(result.page_properties['background-color'])
+                        result.auto_page_foreground = True
                 _navigation_colors(result, [statement])
                 if statement.kind == 'format' and statement.resolved_id:
                     for e in result.symbols:
