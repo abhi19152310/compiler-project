@@ -24,7 +24,7 @@ COMPONENT_CSS = {
     "image": 'img { max-width: 100%; height: auto; object-fit: contain; }',
     "form": '.form { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }\n.form input, .form textarea, .form select { max-width: 100%; min-width: 0; font: inherit; padding: 10px; border: 1px solid #64748b; border-radius: 6px; }\n.static-form-note { font-size: 0.875rem; }',
     "table": '.table-scroll { max-width: 100%; overflow-x: auto; }\ntable { border-collapse: collapse; width: 100%; }\nth, td { text-align: left; border: 1px solid #64748b; padding: 10px; }',
-    "button": 'button, .button-link { font: inherit; padding: 12px 20px; border: 1px solid #64748b; border-radius: 6px; }\n.button-link { display: inline-block; }',
+    "button": 'button, .button-link { font: inherit; padding: 12px 20px; border: 1px solid #64748b; border-radius: 6px; cursor: pointer; }\nbutton:hover, .button-link:hover { filter: brightness(0.96); }\nbutton:active, .button-link:active { filter: brightness(0.88); transform: translateY(1px); }\n.button-link { display: inline-block; }',
 }
 
 

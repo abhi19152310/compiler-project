@@ -17,7 +17,9 @@ body { margin: 0; background: #ffffff; color: #111827; font-family: Arial, sans-
 .page { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
 h1 { font-size: 2rem; margin: 0 0 20px; }
 p { line-height: 1.6; margin: 0 0 20px; white-space: pre-wrap; }
-button { font: inherit; padding: 12px 20px; border: 1px solid #64748b; border-radius: 6px; }
+button { font: inherit; padding: 12px 20px; border: 1px solid #64748b; border-radius: 6px; cursor: pointer; }
+button:hover { filter: brightness(0.96); }
+button:active { filter: brightness(0.88); transform: translateY(1px); }
 """
 
 

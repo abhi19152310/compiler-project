@@ -100,6 +100,8 @@ def validate_property(kind: str, key: str, value: str) -> str | None:
     if key in LENGTHS:
         if value == "auto" and key in {"width", "height", "margin", "margin-left", "margin-right"}:
             return None
+        if value == "fit-content" and key == "width":
+            return None
         match = re.fullmatch(r"(\d+(?:\.\d+)?)(px|rem|em|%|vw|vh)", value)
         if value != "0" and (not match or float(match[1]) > 10000):
             return f'{key} needs a non-negative dimension (px, rem, em, %, vw or vh), at most 10000.'

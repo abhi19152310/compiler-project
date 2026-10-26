@@ -54,6 +54,23 @@ def test_button_style_link_is_not_action_button():
     assert doc.tags('a')[0]['href'] == '/registration'
     assert doc.tags('a')[0]['class'] == 'button-link'
     assert doc.tags('button')[0]['type'] == 'button'
+    assert 'button:active' in result.css and 'transform: translateY(1px)' in result.css
+
+
+@pytest.mark.parametrize(('direction', 'margins'), [
+    ('left', 'margin-left: 0; margin-right: auto;'),
+    ('center', 'margin-left: auto; margin-right: auto;'),
+    ('right', 'margin-left: auto; margin-right: 0;'),
+])
+def test_element_can_be_aligned_within_its_parent(direction, margins):
+    result = ok(
+        'Add a container named "actions".\n'
+        'Add a button that says "Register" inside "actions".\n'
+        f'Align the button to the {direction}.'
+    )
+    assert 'display: block' in result.css
+    assert 'width: fit-content' in result.css
+    assert margins in result.css
 
 
 @pytest.mark.parametrize('href', ['', '#', 'javascript:alert(1)', 'data:text/html,x', '//evil.example', 'https://user:pass@example.com', 'https://', 'https://example.com:bad', '/a%0ab', '/%5cevil', 'file:///etc/passwd'])

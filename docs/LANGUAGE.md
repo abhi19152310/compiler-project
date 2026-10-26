@@ -42,8 +42,11 @@ Containment is explicit: merely creating a section does not capture future lines
 Macro instructions such as navigation, cards and forms create their own children;
 an `inside` suffix moves their root components into the specified parent.
 Containment cycles, invalid HTML content models and unresolved references fail.
-Left/right/above/below positioning requires siblings; these produce flex wrappers
-and cannot be used for list items, table rows/cells, options or anchor children.
+Left/right/above/below positioning relative to another element requires siblings;
+these produce flex wrappers and cannot be used for list items, table rows/cells,
+options or anchor children. Align one element within its parent using
+`Align "name" to the left`, `Align "name" to the center`, or
+`Align "name" to the right`. `Put "name" on the left/center/right` is also supported.
 
 ## Links, images and dimensions
 
@@ -59,7 +62,8 @@ Make the logo link to the homepage.
 ```
 
 Links also accept `labeled`, `called`, `that says`, `to` and `pointing to`.
-Anchors always have destinations; buttons remain static action placeholders.
+Anchors always have destinations; buttons provide hover and pressed visual feedback
+but do not navigate or perform an action. Use a link or button-style link to navigate.
 New-tab anchors get `target="_blank" rel="noopener noreferrer"`.
 Destinations can be HTTP(S) URLs without credentials, relative/root page paths,
 or fragments. Fragment IDs must exist in the generated page. External pages and
@@ -186,8 +190,9 @@ pixels`, and `Give the heading a font size of 32 pixels` normalize to the same D
 
 Dimensions accept non-negative px/rem/em/%/vw/vh, up to 10000; zero is disallowed
 for width, height and font-size. Unitless zero is otherwise allowed. `pixels` /
-`pixel` normalizes to px. Width, height, margin and horizontal margins also accept
-auto. Arbitrary CSS expressions, positioning, scripts and inline styles are rejected.
+`pixel` normalizes to px. Width also accepts `fit-content`; width, height, margin
+and horizontal margins also accept auto. Arbitrary CSS expressions, positioning,
+scripts and inline styles are rejected.
 
 | Phrase / token | Exact mapping |
 | --- | --- |

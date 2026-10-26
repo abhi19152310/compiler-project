@@ -226,6 +226,16 @@ def expand_english(source: str) -> list[str] | None:
         return [configure(ref(m[1]), "box-shadow", "subtle")]
     if m := match(r'give (.+?) ([-\d.]+) pixels? of (padding|margin|gap)'):
         return [configure(ref(m[1]), m[3].lower(), m[2] + "px")]
+    if m := match(r'(?:align|put) (.+?) (?:to|on) (?:the )?(left|right|center|centre)'):
+        direction = {"centre": "center"}.get(m[2].lower(), m[2].lower())
+        properties = {"display": "block", "width": "fit-content"}
+        if direction == "left":
+            properties.update({"margin-left": "0", "margin-right": "auto"})
+        elif direction == "right":
+            properties.update({"margin-left": "auto", "margin-right": "0"})
+        else:
+            properties.update({"margin-left": "auto", "margin-right": "auto"})
+        return [configure(ref(m[1]), key, value) for key, value in properties.items()]
     if m := match(r'(?:center|centre) (.+?)(?: and align (.+?) to the (left|right))?'):
         output = [configure(ref(m[1]), "text-align", "center")]
         if m[2]:
