@@ -1,4 +1,4 @@
-"""Real editor interaction, separate panel, safe replacements and mobile layout."""
+"""Real editor interaction, drawer panel, safe replacements and mobile layout."""
 
 import os
 from threading import Thread
@@ -31,6 +31,9 @@ def workspace(browser, tmp_path):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(f'http://127.0.0.1:{server.server_port}')
+    page.locator('#assistant-toggle').click()
+    page.locator('#writing-assistant[data-open="true"]').wait_for()
+    page.wait_for_function('getComputedStyle(document.querySelector("#writing-assistant")).transform === "none"')
     yield page, tmp_path
     page.close()
     server.shutdown()
@@ -52,10 +55,9 @@ def test_correct_real_request_and_followup_without_editor_overlay(workspace):
     page, _ = workspace
     editor = page.locator('#source')
     assert page.locator('#writing-assistant').evaluate('(n) => !n.closest("#compile-form") && !n.closest(".source-editor")')
-    bounds = page.locator('.workspace').evaluate('''n => [".editor-panel", ".assistant-panel", ".preview-panel"].map(s => {
-      const r = n.querySelector(s).getBoundingClientRect(); return {x:r.x, right:r.right};
-    })''')
-    assert bounds[0]['right'] <= bounds[1]['x'] and bounds[1]['right'] <= bounds[2]['x']
+    # The open drawer sits at the right edge and leaves the editor uncovered.
+    panel = page.locator('#writing-assistant').bounding_box()
+    assert abs(panel['x'] + panel['width'] - 1440) < 1 and page.locator('.editor-panel').bounding_box()['x'] + page.locator('.editor-panel').bounding_box()['width'] <= panel['x']
     original = 'make a webpage named abhi.\nmake webpage background colour green.\nmake a navigation bar with home,about,contact.\nmake it yellow.'
     editor.fill(original)
     for index, instruction in enumerate(original.splitlines()):
@@ -141,15 +143,31 @@ def test_stale_suggestion_cannot_overwrite_new_text(workspace):
 
 
 @pytest.mark.parametrize('width', [375, 768, 1200])
-def test_assistant_layout_at_smaller_viewports(workspace, width):
+def test_assistant_drawer_at_smaller_viewports(workspace, width):
     page, _ = workspace
     page.set_viewport_size({'width': width, 'height': 950})
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     assert page.locator('#writing-assistant').is_visible()
     panel = page.locator('#writing-assistant').bounding_box()
-    editor = page.locator('.editor-panel').bounding_box()
-    assert panel['y'] >= editor['y'] + editor['height']
+    assert abs(panel['x'] + panel['width'] - width) < 1 and panel['width'] <= width
 
+
+def test_drawer_opens_from_button_and_closes_with_button_or_escape(workspace):
+    from playwright.sync_api import expect
+    page, _ = workspace
+    panel = page.locator('#writing-assistant')
+    toggle = page.locator('#assistant-toggle')
+    page.locator('#assistant-close').click()
+    expect(panel).to_be_hidden()
+    expect(toggle).to_have_attribute('aria-expanded', 'false')
+    expect(toggle).to_be_focused()
+    box = toggle.bounding_box()
+    assert box['x'] + box['width'] > 1440 - 60 and box['y'] + box['height'] > 1000 - 60
+    toggle.click()
+    expect(panel).to_be_visible()
+    expect(page.locator('#assistant-close')).to_be_focused()
+    page.keyboard.press('Escape')
+    expect(panel).to_be_hidden()
 
 
 def test_partial_create_shows_suggestions_and_no_empty_column(workspace):
@@ -161,6 +179,7 @@ def test_partial_create_shows_suggestions_and_no_empty_column(workspace):
     expect(page.locator('#writing-assistant')).to_be_visible()
     # An older cached template without the panel must retain a two-column layout.
     page.locator('#writing-assistant').evaluate('(n) => n.remove()')
+    page.locator('#assistant-toggle').evaluate('(n) => n.remove()')
     dimensions = page.locator('.workspace').evaluate('(n) => ({columns:getComputedStyle(n).gridTemplateColumns.split(" ").length, gap:parseFloat(getComputedStyle(n).columnGap), editor:n.querySelector(".editor-panel").getBoundingClientRect().right, preview:n.querySelector(".preview-panel").getBoundingClientRect().x})')
     assert dimensions['columns'] == 2
     assert abs(dimensions['preview'] - dimensions['editor'] - dimensions['gap']) < 1

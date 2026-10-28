@@ -70,6 +70,15 @@ def _safe_reference(reference, result):
     return safe_target(typed)
 
 
+def _user_reference(reference, instruction, result):
+    """"This link"/"that button" means the focused component of that type."""
+    if re.search(r'\b(?:this|that)\s+(?:external\s+)?' + re.escape(reference or '') + r'\b', instruction, re.I):
+        focused = next((e for e in result.symbols if e.id == result.focus_id), None)
+        if focused and focused.type == reference:
+            reference = 'safe:it'
+    return _safe_reference(reference, result)
+
+
 def _navigation_colors(result, statements):
     by_id = {e.id: e for e in result.symbols}
     for statement in statements:
@@ -94,6 +103,7 @@ def compile_natural(source, *, converter, previous=None):
     result = deepcopy(previous) if previous else CompilationResult()
     result.html = result.css = None
     result.diagnostics = []
+    result.warnings = []
     title = previous.page_tree.title if previous else ''
     clauses = list(segment(source))
     if not clauses:
@@ -109,15 +119,17 @@ def compile_natural(source, *, converter, previous=None):
         for sentence in normalized:
             sentence.line, sentence.original = line, instruction
             parse_sentence(sentence, partial)
-        unresolved_position_source = False
+        # A rule match whose target does not exist is usually a misread of loose
+        # wording (e.g. "the paragraph text"), so the converter gets a chance.
+        unresolved_source = False
         if not partial.diagnostics and not any(s.kind == 'add' for s in partial.ast):
             for statement in partial.ast:
-                if statement.kind == 'position' and statement.reference not in {'it', 'this'}:
+                if statement.kind in {'position', 'format'} and statement.reference not in {'it', 'this', 'page'}:
                     probe = deepcopy(result)
-                    lookup(probe, _safe_reference(statement.reference, probe), line)
-                    unresolved_position_source = unresolved_position_source or bool(probe.diagnostics)
+                    lookup(probe, _user_reference(statement.reference, instruction, probe), line, plural=statement.kind == 'format')
+                    unresolved_source = unresolved_source or bool(probe.diagnostics)
         trace = {"line": line, "input": instruction, "route": 'deterministic', "operations": []}
-        if partial.diagnostics or unresolved_position_source:
+        if partial.diagnostics or unresolved_source:
             try:
                 dsl, conversion = converter.convert(instruction, context_for(result, title))
                 trace.update(conversion)
@@ -145,11 +157,7 @@ def compile_natural(source, *, converter, previous=None):
                 # Compiler DSL remains valid, while user-level type/pronoun edits
                 # require a unique selection instead of silently choosing latest.
                 if statement.kind in {'format', 'position', 'attach', 'wrap'}:
-                    if re.search(r'\b(?:this|that)\s+(?:external\s+)?' + re.escape(statement.reference or '') + r'\b', instruction, re.I):
-                        focused = next((e for e in result.symbols if e.id == result.focus_id), None)
-                        if focused and focused.type == statement.reference:
-                            statement.reference = 'safe:it'
-                    statement.reference = _safe_reference(statement.reference, result)
+                    statement.reference = _user_reference(statement.reference, instruction, result)
                 if statement.kind == 'position':
                     statement.target_type = _safe_reference(statement.target_type, result)
                 if statement.kind == 'attach':
@@ -171,7 +179,7 @@ def compile_natural(source, *, converter, previous=None):
                 if statement.kind == 'format' and statement.reference == 'page':
                     if any(k in statement.properties for k in {'color', 'text-color'}):
                         result.auto_page_foreground = False
-                    elif 'background-color' in statement.properties and (result.auto_page_foreground or not any(k in result.page_properties for k in {'color', 'text-color'})):
+                    elif 'background-color' in statement.properties and 'background-color' in result.page_properties and (result.auto_page_foreground or not any(k in result.page_properties for k in {'color', 'text-color'})):
                         result.page_properties['text-color'] = readable_foreground(result.page_properties['background-color'])
                         result.auto_page_foreground = True
                 _navigation_colors(result, [statement])

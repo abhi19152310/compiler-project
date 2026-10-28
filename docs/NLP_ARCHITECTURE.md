@@ -141,6 +141,44 @@ support the same structured-output contract.
 | TEXT2WEB_NLP_URL | http://127.0.0.1:11434 |
 | TEXT2WEB_NLP_TIMEOUT | 20 seconds; configurable up to 120 |
 | TEXT2WEB_NLP_API_KEY | Optional server-only gateway credential |
+| TEXT2WEB_NLP_KEEP_ALIVE | 30m; how long Ollama keeps the model loaded between requests |
+
+### Gemma through the Gemini API
+
+Set `TEXT2WEB_NLP_BACKEND=gemma` and paste a key from Google AI Studio into
+`GEMINI_API_KEY` in the project's `.env` file (ignored by git; `.env.example` is
+the template). `app.py`, `python -m text2web` and `evaluation.loose --backend gemma`
+read `.env` at startup; shell variables override it. The Gemma model is set with
+`TEXT2WEB_GEMMA_MODEL` (default `gemma-4-26b-a4b-it`; `gemma-4-31b-it` also works),
+separately from the Ollama model in `TEXT2WEB_NLP_MODEL`, so switching backends
+never sends one backend's model name to the other. The timeout defaults to 30 s.
+The page header and the startup line show the active backend and model.
+
+Gemma has exactly the local model's role: it receives the same rules, worked
+examples and page context, returns operations, and goes through the same cleanup,
+schema validation, placement repair, invented-content guard, DSL emission and
+compiler checks. It never produces HTML or CSS. Requests ask for JSON output; if
+the API rejects JSON response mode for the chosen model, the provider retries once
+without it and parses the JSON from the reply, with validation unchanged. Thinking
+is set to minimal for speed. The free tier limits Gemma to 16,000 input tokens per
+minute and each sentence sends about 2,100, so roughly six loose sentences fit in
+a minute. On a 429 the provider waits for the `retryDelay` Google states (at most
+about a minute) and retries, up to twice, before reporting the limit. Sentences
+the offline rules understand never call the API. The key is sent only in the `x-goog-api-key` header,
+never in URLs, prompts, generated pages or error messages. Instructions and page
+context are sent to Google, so use offline or Ollama mode for anything private.
+
+The prompt is a rules section plus worked examples sent as chat turns (a gym site,
+deliberately unlike the benchmark). The app warms the model at startup so the
+first request is not a cold load. Requests use an 8192-token context and at most
+768 generated tokens per clause. Two code checks back up the prompt: created text,
+image sources/descriptions and web URLs must appear in the user's instruction, and
+an unsupported shade such as `light-yellow` falls back to its base color.
+
+`python -m evaluation.loose` runs 22 loose sentences (`--set holdout` runs 16
+sentences that were not used to tune the prompt) against the configured model and
+reports pass rate, latency and token counts. A negative case passes only when it
+is rejected with a clarification or an unsupported message.
 
 Timeouts, missing models, connection failures, rate limits, incomplete responses,
 oversized responses and invalid schemas produce plain diagnostics without exposing

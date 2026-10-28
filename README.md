@@ -125,7 +125,8 @@ Make it bold.
 - Colors: `blue`, `red`, `green`, `black`, `white`.
 - Color means text color for headings/paragraphs and background color for buttons.
   Buttons use preset foreground colors. Text contrast is checked against the
-  generated background, and combinations below 4.5:1 are compile errors.
+  generated background; combinations below 4.5:1 produce a warning, and the
+  page is still generated.
 - The page declaration is not an eligible reference target. `it`/`this` selects
   the most recently **introduced** element. Position targets select the latest
   element of the named type; supported directions are left, right, above, and below.
@@ -154,7 +155,7 @@ whitespace rules still apply to titles, headings, and buttons; paragraphs use
 | 3. Syntax analysis | LALR grammar, AST, and independent line-based syntax diagnostics |
 | 4. Reference resolution | Symbol table resolves `it`/`this` and named element-type targets |
 | 5. Layout constraints | Directed row/column constraints, cycle detection, line-aware diagnostics |
-| 6. Type/accessibility checks | Element/property compatibility, image descriptions and URL schemes, button names, 4.5:1 text contrast |
+| 6. Type/accessibility checks | Element/property compatibility, image descriptions and URL schemes, button names; 4.5:1 text contrast (warning only) |
 | 7. IR and optimization | HTML-independent page tree; redundant wrappers are removed, identical CSS rules are merged, and later property assignments replace earlier values |
 | 8. Code generation | Escaped, deterministic HTML and CSS; flexbox rows and columns |
 | Error reporting | Syntax, reference, type, layout, and accessibility errors include source lines; any error prevents output |

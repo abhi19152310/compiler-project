@@ -251,11 +251,11 @@ def test_accessibility_and_structure_diagnostics(source, expected):
 
 def test_inherited_background_and_hover_contrast():
     result = ok('Add a section. Set the section background-color to black.\nAdd a white paragraph that says "Visible" inside the section.')
-    assert result.success
+    assert result.success and not result.warnings
     result = compile_body('Add a section. Set the section background-color to black.\nAdd a black paragraph that says "Invisible" inside the section.')
-    assert any('4.5:1' in d.message for d in result.diagnostics)
+    assert result.success and any('4.5:1' in w.message and 'white text' in w.message for w in result.warnings)
     result = compile_body('Create a link labelled "Visit" to "/".\nGive the link a hover color of white.')
-    assert any('Hover' in d.message for d in result.diagnostics)
+    assert result.success and any('Hover' in w.message for w in result.warnings)
 
 
 @pytest.mark.parametrize('source', [

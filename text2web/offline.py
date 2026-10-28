@@ -71,6 +71,11 @@ def interpret(instruction, context=None):
         return clarify('Which background color should I use?')
 
     if m := match(r'(?:add (?:me )?(?:a |an |the )?(?:web ?page|website|homepage|page)(?: (?:called|named|titled|for))?|i (?:need|want|would like) (?:a |an )?(?:web ?page|website|homepage|page)(?: (?:called|named|titled|for))?) (.+)'):
+        # A run-on sentence ("called Abhimall put a welcome heading") holds a
+        # second command; leave it to the model rather than misread the title.
+        if not re.fullmatch(Q, m[1].strip()) and re.search(
+                r'\b(?:put|add|create|insert|place|make|give|show|display|build)\s+(?:a|an|the|me|it|some)\b', m[1], re.I):
+            return None
         return result({'op': 'page', 'title': text(m[1])})
     if match(r'(?:add|i need|i want) (?:a |an )?(?:web ?page|website|homepage|page)'):
         return clarify('What should the page be called?')
@@ -123,7 +128,7 @@ def interpret(instruction, context=None):
 
     if m := match(rf'(?:change|set|make) (.+?)(?:\'s)? colou?r (?:to )?({COLOR_WORDS})'):
         return result(style(target(m[1]), {'color': m[2].lower().replace(' ', '-')}))
-    if m := match(rf'(?:make|turn|paint) (.+?) (?:to )?({COLOR_WORDS})'):
+    if (m := match(rf'(?:make|turn|paint) (.+?) (?:to )?({COLOR_WORDS})')) and not re.search(r'\bbackground\b', m[1], re.I):
         reference, value = target(m[1]), m[2].lower().replace(' ', '-')
         return result(style(reference, {'background-color' if reference.endswith(':nav') or reference == 'nav' else 'color': value}))
     if m := match(rf'(?:change|set|make) (.+?)(?:\'s)? (?:background(?: colou?r)?|colou?r) (?:to )?({COLOR_WORDS})'):

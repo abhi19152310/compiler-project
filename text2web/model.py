@@ -66,6 +66,8 @@ class CompilationResult:
     ast: list[Statement] = field(default_factory=list)
     symbols: list[Element] = field(default_factory=list)
     diagnostics: list[Diagnostic] = field(default_factory=list)
+    # Advisory findings (such as low contrast) that do not block generation.
+    warnings: list[Diagnostic] = field(default_factory=list)
     page_tree: PageTree | None = None
     html: str | None = None
     css: str | None = None

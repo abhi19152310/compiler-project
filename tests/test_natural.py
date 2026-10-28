@@ -157,16 +157,16 @@ def test_model_response_is_schema_checked_reparsed_and_semantically_validated():
             return {'operations': self.operations}
     provider = Provider([create('paragraph', 'A previously unseen phrasing was interpreted')])
     initial = valid('Create a page called Model demo. Add a heading saying Hello.')
-    result = compile_update(initial, 'Could we include a short introduction beneath the welcome?', nlp_converter=NaturalInterpreter(provider))
+    result = compile_update(initial, 'Could we include an intro reading: a previously unseen phrasing was interpreted?', nlp_converter=NaturalInterpreter(provider))
     assert result.success and result.interpretations[-1]['route'] == 'model'
     assert provider.contexts[0]['title'] == 'Model demo'
     assert provider.contexts[0]['components'][0]['id'] == 'element1'
     assert result.tokens[-1]['type'] == 'STRING' and result.ast[-1].element_type == 'paragraph'
     invalid = Provider([create('link', 'Unsafe', {'href': 'javascript:alert(1)'})])
-    failed = compile_update(initial, 'Use a fancy reference for this.', nlp_converter=NaturalInterpreter(invalid))
+    failed = compile_update(initial, 'Use a fancy reference called Unsafe for this.', nlp_converter=NaturalInterpreter(invalid))
     assert not failed.success and any('href' in d.message for d in failed.diagnostics)
     injected = Provider([create('paragraph', '<script>alert(1)</script> & text')])
-    result = compile_update(initial, 'Use unusual wording.', nlp_converter=NaturalInterpreter(injected))
+    result = compile_update(initial, 'Use unusual wording: <script>alert(1)</script> & text', nlp_converter=NaturalInterpreter(injected))
     assert result.success and '<script>' not in result.html and '&lt;script&gt;' in result.html
 
 
@@ -208,7 +208,7 @@ def test_ollama_payload_and_server_only_authorization():
     (TimeoutError(), 'service', 'timed out'), (socket.timeout(), 'service', 'timed out'),
     (URLError('private-host'), 'service', 'unavailable'),
     (HTTPError('url', 429, 'private', {}, None), 'service', 'rate limited'),
-    (HTTPError('url', 404, 'private', {}, None), 'service', 'not found'),
+    (HTTPError('url', 404, 'private', {}, None), 'service', 'no model named'),
     (HTTPError('url', 500, 'private', {}, None), 'service', 'service'),
 ])
 def test_model_service_failure_is_plain_and_private(failure, phase, word):
@@ -231,6 +231,276 @@ def test_invalid_model_envelopes(raw):
     provider = OllamaProvider(model='model', opener=lambda *a, **k: Response(raw))
     with pytest.raises(IntentError):
         provider.interpret('A request', {})
+
+
+def test_invalid_page_background_is_a_diagnostic_not_a_crash():
+    initial = valid('Create a page called Bakery.')
+    result = compile_update(initial, 'configure "page" "background-color" "soft-yellow"', nlp_converter=NaturalInterpreter())
+    assert not result.success and 'supported color' in result.diagnostics[0].message
+
+
+def test_prompt_examples_are_valid_operations_and_model_slips_are_tidied():
+    from text2web.nlp import EXAMPLES, _tidy
+    for message in EXAMPLES[1::2]:
+        validate_intents(json.loads(message['content']))
+    tidied = _tidy({'operations': [create('button', 'Go', parent='null'), {'op': 'attach', 'target': 'button', 'parent': 'body'}]})
+    assert tidied == {'operations': [create('button', 'Go')]}
+    shaded = _tidy({'operations': [style('page', {'background-color': 'light-yellow'}), style('page', {'color': 'light-blue'})]})
+    assert [o['properties'] for o in shaded['operations']] == [{'background-color': 'yellow'}, {'color': 'light-blue'}]
+
+
+class FixedProvider:
+    def __init__(self, *operations):
+        self.operations = list(operations)
+
+    def interpret(self, instruction, context):
+        return {'operations': deepcopy(self.operations)}
+
+
+@pytest.mark.parametrize('instruction,operation', [
+    ('Write some marketing text for us', create('paragraph', 'Fresh bread, baked with love every day')),
+    ('Show off a picture of our storefront', create('image', '', {'src': 'storefront.jpg', 'alt': 'Our storefront'})),
+    ('Link to our Instagram labelled Follow us', create('link', 'Follow us', {'href': 'https://instagram.com/made-up'})),
+])
+def test_model_may_not_invent_content(instruction, operation):
+    initial = valid('Create a page called Bakery.')
+    result = compile_update(initial, instruction, nlp_converter=NaturalInterpreter(FixedProvider(operation)))
+    assert not result.success and result.diagnostics[0].phase == 'clarification'
+
+
+def placed(result, kind):
+    ids = {e.id: e for e in result.symbols}
+    return [(s.properties['position'], ids[s.target_id].type) for s in result.ast
+            if s.kind == 'position' and ids[s.resolved_id].type == kind]
+
+
+@pytest.mark.parametrize('instruction,extra,direction', [
+    ('Write a short line under the heading that says We bake daily', [], 'below'),
+    ('Beneath the heading add a blurb: We bake daily', [], 'below'),
+    ('Above the heading, add a line saying We bake daily', [], 'above'),
+    # The model already placed it and only added a stray parent.
+    ('Under the heading put a line saying We bake daily', [{'op': 'position', 'target': 'name:line', 'direction': 'below', 'relative_to': 'element1'}], 'below'),
+])
+@pytest.mark.parametrize('parent', ['element1', 'name:element1', 'heading'])
+def test_placement_emitted_as_a_parent_becomes_a_position(instruction, extra, direction, parent):
+    initial = valid('Create a page called Bakery. Add a heading saying Hello.')
+    provider = FixedProvider(create('paragraph', 'We bake daily', {'name': 'line'} if extra else {}, parent), *extra)
+    result = compile_update(initial, instruction, nlp_converter=NaturalInterpreter(provider))
+    assert result.success, [d.message for d in result.diagnostics]
+    paragraph = [e for e in result.symbols if e.type == 'paragraph'][0]
+    assert paragraph.parent_id is None and placed(result, 'paragraph') == [(direction, 'heading')]
+
+
+@pytest.mark.parametrize('instruction', [
+    'Stick a line saying We bake daily onto the heading',  # no placement word: not guessed
+    'Under the heading, or above it, add a line saying We bake daily',  # conflicting directions
+])
+def test_placement_repair_never_guesses_a_direction(instruction):
+    initial = valid('Create a page called Bakery. Add a heading saying Hello.')
+    provider = FixedProvider(create('paragraph', 'We bake daily', {}, 'element1'))
+    result = compile_update(initial, instruction, nlp_converter=NaturalInterpreter(provider))
+    assert not result.success and 'cannot contain' in result.diagnostics[0].message
+
+
+def test_run_on_page_title_is_left_to_the_model_not_misread():
+    from text2web.offline import interpret
+    # Reported: the whole rest of the sentence became the page title.
+    assert interpret('please build me a webpage called abhimall put a welcome heading') is None
+    assert interpret('Create a page called Abhimall and add a heading saying Hi') is None
+    assert interpret('Create a page called "Add a Smile"')['operations'][0]['title'] == 'Add a Smile'
+    assert interpret('Build me a website named Techno Fest')['operations'][0]['title'] == 'Techno Fest'
+    result = natural('please build me a webpage called abhimall put a welcome heading')
+    assert not result.success and result.diagnostics[0].phase == 'clarification'
+
+
+def test_reference_to_a_name_never_assigned_means_the_new_component():
+    # Gemma's actual output: the button is created unnamed, then placed by a made-up name.
+    initial = valid('Create a page called Bakery. Add a heading saying Hello.')
+    provider = FixedProvider(create('button', 'Order Now'),
+                             {'op': 'position', 'target': 'name:order-now-button', 'direction': 'below', 'relative_to': 'element1'})
+    result = compile_update(initial, 'Under the title, drop in a button labelled Order Now', nlp_converter=NaturalInterpreter(provider))
+    assert result.success, [d.message for d in result.diagnostics]
+    assert placed(result, 'button') == [('below', 'heading')]
+
+
+def test_component_placed_relative_to_itself_means_the_new_component():
+    # Gemma's actual output: "element1 below element1" after creating a paragraph.
+    initial = valid('Create a page called Bakery. Add a heading saying Hello.')
+    provider = FixedProvider(create('paragraph', 'We bake every morning'),
+                             {'op': 'position', 'target': 'element1', 'direction': 'below', 'relative_to': 'element1'})
+    result = compile_update(initial, 'Write a short line under the heading that says We bake every morning', nlp_converter=NaturalInterpreter(provider))
+    assert result.success, [d.message for d in result.diagnostics]
+    assert placed(result, 'paragraph') == [('below', 'heading')]
+
+
+def test_new_component_reference_repair_needs_exactly_one_new_component():
+    initial = valid('Create a page called Bakery. Add a heading saying Hello.')
+    provider = FixedProvider(create('button', 'Order Now'), create('button', 'Call Us'),
+                             {'op': 'position', 'target': 'name:order-now-button', 'direction': 'below', 'relative_to': 'element1'})
+    result = compile_update(initial, 'Under the title add buttons Order Now and Call Us', nlp_converter=NaturalInterpreter(provider))
+    assert not result.success and 'order-now-button' in result.diagnostics[0].message
+
+
+def test_placement_repair_keeps_real_containers():
+    initial = valid('Create a page called Bakery. Add a heading saying Hello. Add a section.')
+    provider = FixedProvider(create('paragraph', 'We bake daily', {}, 'section'))
+    result = compile_update(initial, 'Under the heading, inside the section, add a line saying We bake daily', nlp_converter=NaturalInterpreter(provider))
+    assert result.success
+    section = [e for e in result.symbols if e.type == 'section'][0]
+    assert [e.parent_id for e in result.symbols if e.type == 'paragraph'] == [section.id]
+
+
+def test_model_content_taken_from_the_instruction_is_accepted():
+    initial = valid('Create a page called Bakery.')
+    provider = FixedProvider(create('link', 'Follow us', {'href': 'https://instagram.com/sweetcrumbs'}))
+    result = compile_update(initial, 'Drop a link to https://instagram.com/sweetcrumbs labelled follow us!', nlp_converter=NaturalInterpreter(provider))
+    assert result.success and result.interpretations[-1]['route'] == 'model'
+    # The model may fix spacing and capitalisation of what the user wrote.
+    provider = FixedProvider(create('nav', '', {'name': 'menu'}), create('link', 'Contact Us', {'href': '/contact-us'}, 'name:menu'))
+    result = compile_update(initial, 'add a menu bar with fields "about","home","contactus"', nlp_converter=NaturalInterpreter(provider))
+    assert result.success, [d.message for d in result.diagnostics]
+
+
+def test_model_request_keeps_model_loaded_and_bounds_output():
+    seen = []
+    def opener(request, timeout):
+        seen.append(json.loads(request.data))
+        return Response(envelope({'operations': [create('paragraph', 'Hello')]}))
+    OllamaProvider(model='model', opener=opener).interpret('Some novel description', {'components': []})
+    payload = seen[0]
+    assert payload['keep_alive'] and payload['options']['num_predict'] <= 1024
+    assert [m['role'] for m in payload['messages']][:3] == ['system', 'user', 'assistant']
+    assert json.loads(payload['messages'][-1]['content'])['instruction'] == 'Some novel description'
+
+
+def gemini_envelope(text, finish='STOP', thought=None):
+    parts = ([{'text': thought, 'thought': True}] if thought else []) + [{'text': text}]
+    return json.dumps({'candidates': [{'content': {'role': 'model', 'parts': parts}, 'finishReason': finish}],
+                       'usageMetadata': {'promptTokenCount': 900, 'candidatesTokenCount': 20}}).encode()
+
+
+def test_gemma_request_shape_and_key_stays_in_header():
+    from text2web.nlp import GemmaProvider
+    seen = []
+    def opener(request, timeout):
+        seen.append((request, timeout))
+        return Response(gemini_envelope(json.dumps({'operations': [create('paragraph', 'Hello')]})))
+    provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='secret-key', opener=opener)
+    data = provider.interpret('Some novel description', {'components': []})
+    assert data['operations'][0]['text'] == 'Hello'
+    request, timeout = seen[0]
+    body = json.loads(request.data)
+    assert request.full_url == 'https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent'
+    assert request.get_header('X-goog-api-key') == 'secret-key' and timeout == 30
+    assert 'secret-key' not in request.full_url and 'secret-key' not in request.data.decode()
+    assert 'operation schema' in body['systemInstruction']['parts'][0]['text']
+    assert [c['role'] for c in body['contents']][:2] == ['user', 'model'] and body['contents'][-1]['role'] == 'user'
+    assert json.loads(body['contents'][-1]['parts'][0]['text'])['instruction'] == 'Some novel description'
+    assert body['generationConfig']['temperature'] == 0 and body['generationConfig']['responseMimeType'] == 'application/json'
+
+
+def test_gemma_reply_parsing():
+    from text2web.nlp import GemmaProvider
+    operations = json.dumps({'operations': [create('heading', 'Hi')]})
+    for reply in [gemini_envelope('```json\n' + operations + '\n```'), gemini_envelope(operations, thought='Let me think.')]:
+        provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='k', opener=lambda *a, **k: Response(reply))
+        assert provider.interpret('x', {})['operations'][0]['type'] == 'heading'
+    for reply in [gemini_envelope(operations, finish='MAX_TOKENS'), gemini_envelope('not json'), b'{"candidates": []}',
+                  gemini_envelope(json.dumps({'operations': [{'op': 'execute'}]}))]:
+        provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='k', opener=lambda *a, **k: Response(reply))
+        with pytest.raises(IntentError):
+            provider.interpret('x', {})
+
+
+def test_gemma_falls_back_once_when_json_mode_is_rejected():
+    from text2web.nlp import GemmaProvider
+    bodies = []
+    def opener(request, timeout):
+        body = json.loads(request.data)
+        bodies.append(body)
+        if 'responseMimeType' in body['generationConfig']:
+            raise HTTPError('url', 400, 'Bad Request', {}, BytesIO(b'{"error": {"message": "JSON mode is not enabled for this model"}}'))
+        return Response(gemini_envelope(json.dumps({'operations': [create('paragraph', 'Hello')]})))
+    provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='k', opener=opener)
+    assert provider.interpret('x', {})['operations'][0]['text'] == 'Hello'
+    provider.interpret('y', {})
+    assert ['responseMimeType' in b['generationConfig'] for b in bodies] == [True, False, False]
+
+
+RATE_LIMITED = (b'{"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "details": [{"@type": '
+                b'"type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "57s"}]}}')
+
+
+def test_gemma_waits_for_the_stated_retry_delay_after_a_rate_limit():
+    from text2web.nlp import GemmaProvider
+    waits, calls = [], []
+    def opener(request, timeout):
+        calls.append(1)
+        if len(calls) == 1:
+            raise HTTPError('url', 429, 'Too Many Requests', {}, BytesIO(RATE_LIMITED))
+        return Response(gemini_envelope(json.dumps({'operations': [create('paragraph', 'Hello')]})))
+    provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='k', opener=opener, sleep=waits.append)
+    assert provider.interpret('x', {})['operations'][0]['text'] == 'Hello'
+    assert waits == [58] and len(calls) == 2
+
+
+def test_gemma_gives_up_after_two_rate_limit_waits():
+    from text2web.nlp import GemmaProvider
+    waits = []
+    def opener(request, timeout):
+        raise HTTPError('url', 429, 'Too Many Requests', {}, BytesIO(RATE_LIMITED))
+    provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='k', opener=opener, sleep=waits.append)
+    with pytest.raises(IntentError, match='still reached after waiting'):
+        provider.interpret('x', {})
+    assert waits == [58, 58]
+
+
+def test_model_context_is_compacted_without_changing_meaning():
+    from text2web.nlp import _compact, _user_message
+    context = {'title': 'T', 'focus': None, 'positions': [], 'components': [
+        {'id': 'element1', 'type': 'nav', 'text': '', 'name': 'menu', 'parent': None, 'properties': {}},
+        {'id': 'element2', 'type': 'link', 'text': 'Home', 'name': None, 'parent': 'element1', 'properties': {'href': '/'}}]}
+    assert _compact(context) == {'title': 'T', 'components': [{'id': 'element1', 'type': 'nav', 'name': 'menu'},
+        {'id': 'element2', 'type': 'link', 'text': 'Home', 'parent': 'element1', 'properties': {'href': '/'}}]}
+    assert json.loads(_user_message('Do it', context))['instruction'] == 'Do it'
+
+
+@pytest.mark.parametrize('code,word', [(400, 'GEMINI_API_KEY'), (403, 'not accepted'), (404, 'not found'), (429, 'quota'), (500, 'Gemini API')])
+def test_gemma_service_errors_are_plain_and_private(code, word):
+    from text2web.nlp import GemmaProvider
+    def opener(*args, **kwargs):
+        raise HTTPError('url', code, 'private', {}, BytesIO(b'{"error": "private detail secret-key"}'))
+    initial = valid('Create a page called Model demo.')
+    provider = GemmaProvider(model='gemma-4-26b-a4b-it', api_key='secret-key', opener=opener, sleep=lambda seconds: None)
+    result = compile_update(initial, 'Some unique unsupported wording.', nlp_converter=NaturalInterpreter(provider))
+    assert not result.success and result.diagnostics[0].phase == 'service' and word in result.diagnostics[0].message
+    assert 'private' not in result.diagnostics[0].message and 'secret-key' not in result.diagnostics[0].message
+
+
+def test_gemma_environment_and_env_file(monkeypatch, tmp_path):
+    from text2web.nlp import GemmaProvider, load_env_file
+    for key in ('TEXT2WEB_NLP_BACKEND', 'GEMINI_API_KEY', 'TEXT2WEB_NLP_MODEL', 'TEXT2WEB_GEMMA_MODEL', 'TEXT2WEB_NLP_TIMEOUT'):
+        # Recorded by monkeypatch, so values load_env_file sets are removed afterwards.
+        monkeypatch.setenv(key, '')
+        monkeypatch.delenv(key)
+    env = tmp_path / '.env'
+    env.write_text('# comment\nTEXT2WEB_NLP_BACKEND=gemma\nGEMINI_API_KEY="from-file"\nTEXT2WEB_GEMMA_MODEL=gemma-4-31b-it\n', encoding='utf-8')
+    monkeypatch.setenv('TEXT2WEB_GEMMA_MODEL', 'gemma-4-26b-a4b-it')  # the shell wins over the file
+    load_env_file(env)
+    converter = interpreter_from_env()
+    assert isinstance(converter.provider, GemmaProvider) and converter.provider.model == 'gemma-4-26b-a4b-it'
+    assert converter.label == 'Gemma API gemma-4-26b-a4b-it + offline English'
+    # A shell override to Ollama never picks up the Gemma model name (the reported bug).
+    monkeypatch.setenv('TEXT2WEB_NLP_BACKEND', 'ollama')
+    assert interpreter_from_env().provider.model == 'qwen2.5:3b'
+    assert interpreter_from_env().label == 'Ollama qwen2.5:3b + offline English'
+    monkeypatch.setenv('TEXT2WEB_NLP_BACKEND', 'gemma')
+    monkeypatch.delenv('GEMINI_API_KEY')
+    env.write_text('TEXT2WEB_NLP_BACKEND=gemma\nGEMINI_API_KEY=\n', encoding='utf-8')
+    load_env_file(env)
+    with pytest.raises(ValueError, match='GEMINI_API_KEY'):
+        interpreter_from_env()
+    load_env_file(tmp_path / 'missing.env')  # a missing file is fine
 
 
 def test_environment_model_configuration(monkeypatch):
@@ -277,6 +547,31 @@ def test_web_followups_persist_and_failed_changes_leave_saved_page(tmp_path):
     assert b'Revision 2' in other.get('/').data
     fresh = app.test_client()
     assert b'<iframe' not in fresh.get('/').data
+
+
+def test_web_shows_each_sentence_next_to_its_dsl(tmp_path):
+    client = create_app({'TESTING': True, 'OUTPUT_ROOT': tmp_path / 'web', 'NLP_CONVERTER': NaturalInterpreter()}).test_client()
+    page = client.post('/', data={'source': 'Create a web page called Trace.\nAdd a heading saying "<b>Hi</b>".\nAdd a green navbar with Home and About.'}).data.decode()
+    pane = page[page.index('id="pane-interpretation"'):page.index('id="pane-normalized_input"')]
+    assert pane.count('<tr class="trace-') == 3
+    assert 'Add a green navbar with Home and About' in pane and 'Offline English' in pane
+    assert 'component &#34;link&#34; &#34;About&#34;' in pane or 'component &quot;link&quot; &quot;About&quot;' in pane
+    assert '<b>Hi</b>' not in pane and '&lt;b&gt;Hi&lt;/b&gt;' in pane
+    failed = client.post('/', data={'source': 'Create a web page called Trace.\nImplement some wizardry.'}).data.decode()
+    pane = failed[failed.index('id="pane-interpretation"'):failed.index('id="pane-normalized_input"')]
+    assert 'Not understood' in pane and 'trace-message' in pane
+
+
+def test_contrast_warning_is_shown_saved_and_cleared(tmp_path):
+    client = create_app({'TESTING': True, 'OUTPUT_ROOT': tmp_path / 'web', 'NLP_CONVERTER': NaturalInterpreter()}).test_client()
+    page = client.post('/', data={'source': 'Create a page called Bright.\nAdd a heading saying Hello.\nMake the heading yellow.'}).data.decode()
+    assert 'Compilation successful' in page and '1 warning' in page and 'below the recommended' in page
+    assert 'data-source-line="2"' in page  # the line that created the heading
+    store = WorkspaceStore(tmp_path / 'workspaces.sqlite3')
+    key = client.get_cookie('text2web_workspace').value
+    assert [w.line for w in store.load(key)['result'].warnings] == [2]
+    fixed = client.post('/', data={'mode': 'update', 'revision': '1', 'source': 'Make the heading black.'}).data.decode()
+    assert 'Compilation successful' in fixed and 'below the recommended' not in fixed
 
 
 def test_web_followup_reuses_uploaded_images(tmp_path):
@@ -357,8 +652,7 @@ def test_automatic_page_foreground_survives_saved_followup():
     assert updated.success, updated.diagnostics
     assert updated.page_properties['text-color'] == 'black'
     explicit = compile_update(updated, 'Set the page text-color to white. change the background to yellow.', nlp_converter=NaturalInterpreter())
-    assert not explicit.success
-    assert any(d.phase == 'accessibility' for d in explicit.diagnostics)
+    assert explicit.success and any(w.phase == 'contrast' for w in explicit.warnings)
 
 
 def test_incomplete_make_requests_clarify():

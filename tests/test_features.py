@@ -81,13 +81,15 @@ def test_missing_image_description_and_unsafe_image_url_are_errors():
     assert any(item.phase == "semantic" and "HTTP(S)" in item.message for item in unsafe.diagnostics)
 
 
-def test_contrast_and_element_type_errors_block_compilation():
+def test_low_contrast_warns_and_element_type_errors_block_compilation():
     contrast = compile_source(
         'Create a page titled "Page".\n'
         'Add a white heading that says "Invisible".'
     )
-    assert not contrast.success
-    assert any(item.phase == "accessibility" and "4.5:1" in item.message for item in contrast.diagnostics)
+    # Low contrast is advisory: the page is generated and the warning explains why.
+    assert contrast.success and not contrast.diagnostics
+    assert [(w.phase, w.line) for w in contrast.warnings] == [("contrast", 2)]
+    assert "1.0:1" in contrast.warnings[0].message and "black text would be readable" in contrast.warnings[0].message
 
     invalid_font = compile_source(
         'Create a page titled "Page".\n'

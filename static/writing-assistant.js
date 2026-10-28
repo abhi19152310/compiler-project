@@ -219,6 +219,27 @@
     });
   });
   insertButton.addEventListener('click', () => { if (latest) apply(latest.data.builder, latest); });
+  const toggle = document.querySelector('#assistant-toggle');
+  const close = panel.querySelector('#assistant-close');
+  function setOpen(open, {restore = false} = {}) {
+    panel.dataset.open = String(open);
+    toggle.setAttribute('aria-expanded', String(open));
+    if (!restore) (open ? close : toggle).focus();
+    try { sessionStorage.setItem('text2web-assistant-open', String(open)); } catch (error) { /* storage unavailable */ }
+  }
+  // Compiling reloads the page; keep the drawer open if it was open, without animating.
+  let reopen = false;
+  try { reopen = sessionStorage.getItem('text2web-assistant-open') === 'true'; } catch (error) { /* storage unavailable */ }
+  if (reopen) {
+    panel.style.transition = 'none';
+    setOpen(true, {restore: true});
+    requestAnimationFrame(() => requestAnimationFrame(() => { panel.style.transition = ''; }));
+  }
+  toggle.addEventListener('click', () => setOpen(true));
+  close.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && panel.dataset.open === 'true') setOpen(false);
+  });
   document.querySelector('#load-sample').addEventListener('click', () => { editor = editors[0]; schedule(); });
   refresh();
 })();

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import re
+from threading import Thread
 from uuid import uuid4
 
 from flask import Flask, abort, jsonify, make_response, render_template, request, send_from_directory, url_for
@@ -10,7 +11,7 @@ from werkzeug.utils import secure_filename
 from text2web import compile_source, compile_update
 from text2web.codegen import write_output
 from text2web.assets import IMAGE_EXTENSIONS, is_supported_image, local_asset_path
-from text2web.nlp import interpreter_from_env
+from text2web.nlp import interpreter_from_env, load_env_file
 from text2web.workspace import StaleRevision, WorkspaceStore
 from text2web.writing_assistant import catalog as assistant_catalog, suggest
 
@@ -43,6 +44,7 @@ def create_app(test_config=None):
     interpreter = app.config.get('NLP_CONVERTER') or interpreter_from_env()
     store = WorkspaceStore(app.config.get('STATE_DB', Path(app.config['OUTPUT_ROOT']).parent / 'workspaces.sqlite3'))
     app.extensions['workspace_store'] = store
+    app.extensions['nlp_interpreter'] = interpreter
 
     @app.context_processor
     def versioned_assets():
@@ -186,4 +188,14 @@ def create_app(test_config=None):
 
 
 if __name__ == "__main__":
-    create_app().run(host="127.0.0.1", port=5000, debug=False)
+    load_env_file(ROOT / ".env")
+    try:
+        application = create_app()
+    except ValueError as error:
+        raise SystemExit(f"Configuration error: {error}")
+    print('Text2Web English interpretation:', application.extensions['nlp_interpreter'].label)
+    provider = getattr(application.extensions['nlp_interpreter'], 'provider', None)
+    if provider is not None:
+        # Load the local model in the background so the first request is not cold.
+        Thread(target=provider.warm, daemon=True).start()
+    application.run(host="127.0.0.1", port=5000, debug=False)

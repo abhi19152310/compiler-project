@@ -78,12 +78,15 @@ def check_accessibility(result: CompilationResult) -> None:
         # Background images cannot be evaluated by a solid-color contrast check.
         if any("background-image" in p for p in ancestry):
             continue
-        if _contrast(foreground, background) < 4.5:
-            result.diagnostics.append(Diagnostic(
-                "accessibility", element.line,
-                f'The {color_name} color on this {element.type} does not meet the 4.5:1 text contrast minimum.',
+        # Low contrast is reported as a warning: the page is still generated.
+        ratio = _contrast(foreground, background)
+        if ratio < 4.5:
+            result.warnings.append(Diagnostic(
+                "contrast", element.line,
+                f'The {color_name} color on this {element.type} has {ratio:.1f}:1 text contrast, below the recommended '
+                f'4.5:1 minimum; {readable_foreground(background)} text would be readable.',
             ))
         hover_foreground = color(element.properties.get("hover-color", foreground))
         hover_background = color(element.properties.get("hover-background-color", background))
         if _contrast(hover_foreground, hover_background) < 4.5 and any(k.startswith("hover-") for k in element.properties):
-            result.diagnostics.append(Diagnostic("accessibility", element.line, 'Hover colors do not meet the 4.5:1 text contrast minimum.'))
+            result.warnings.append(Diagnostic("contrast", element.line, 'Hover colors are below the recommended 4.5:1 text contrast minimum.'))

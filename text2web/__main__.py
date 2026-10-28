@@ -18,7 +18,8 @@ def main() -> int:
     parser.add_argument("--natural", action="store_true", help="Use English interpretation and the configured local model fallback")
     args = parser.parse_args()
     try:
-        from .nlp import interpreter_from_env
+        from .nlp import interpreter_from_env, load_env_file
+        load_env_file(Path(__file__).resolve().parents[1] / ".env")
         result = compile_source(args.source.read_text(encoding="utf-8-sig"), nlp_converter=interpreter_from_env() if args.natural else None)
         if args.debug:
             print(json.dumps(result.debug_data(), indent=2, ensure_ascii=True))
@@ -32,6 +33,8 @@ def main() -> int:
     except (OSError, UnicodeError) as error:
         print(f"File error: {error}", file=sys.stderr)
         return 2
+    for warning in sorted(result.warnings, key=lambda w: w.line):
+        print(f"Line {warning.line} [warning]: {warning.message}", file=sys.stderr)
     print("All sentences understood - 0 errors")
     print(f"Wrote index.html and style.css ({args.output / 'index.html'})")
     return 0

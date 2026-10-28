@@ -19,7 +19,7 @@ def restore(data):
     result = CompilationResult(
         sentences=[Sentence(**v) for v in data['sentences']], tokens=data['tokens'],
         ast=[Statement(**v) for v in data['ast']], symbols=[Element(**v) for v in data['symbols']],
-        diagnostics=[Diagnostic(**v) for v in data['diagnostics']], html=data['html'], css=data['css'],
+        diagnostics=[Diagnostic(**v) for v in data['diagnostics']], warnings=[Diagnostic(**v) for v in data.get('warnings', [])], html=data['html'], css=data['css'],
         page_properties=data['page_properties'], auto_page_foreground=data.get('auto_page_foreground', False), focus_id=data.get('focus_id'), focus_explicit=data.get('focus_explicit', False), interpretations=data.get('interpretations', []))
     tree = data.get('page_tree')
     if tree:

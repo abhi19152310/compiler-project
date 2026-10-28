@@ -273,7 +273,8 @@ retain their original markup and merged ID selectors for compatibility.
 Validation covers safe URLs, dimensions, supported nesting, unique IDs/names,
 fragment references, labels, link/button names, image descriptions, heading jumps,
 and solid foreground/background contrast at 4.5:1 (including hover and inherited
-container/page colors). Contrast over background images is not checked. These are
+container/page colors). Low contrast is a warning that names the ratio and a
+readable color; it does not stop the page from being generated. Contrast over background images is not checked. These are
 selected accessibility checks, not WCAG certification. No JavaScript behavior,
 unrestricted prose generation, network availability guarantee, backend integration,
 or arbitrary CSS is implemented.
@@ -295,5 +296,5 @@ labels, or background colors request clarification.
 Yellow (`#ffff00`), orange (`#ffa500`) and purple (`#800080`) are native named
 colors. Buttons, page backgrounds and navigation links choose readable default
 foregrounds: dark text for yellow/orange and white text for purple. Explicit text
-colors remain subject to the contrast check. Automatic page text colors update
+colors remain subject to the contrast warning. Automatic page text colors update
 with later background changes, including saved-page follow-ups.
